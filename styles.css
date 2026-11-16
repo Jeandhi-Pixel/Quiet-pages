@@ -18,3 +18,13 @@
 .update-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .update-actions .btn{padding:11px 13px;min-height:39px;white-space:nowrap}
 @media(max-width:540px){.update-banner{align-items:stretch;flex-direction:column;gap:13px;padding:16px}.update-actions .btn{flex:1}}
+
+/* Dedicated database and backup controls (v3). */
+.settings-wide{min-width:0;flex:1}
+.backup-status{font-weight:700;color:#486c51!important;margin-bottom:7px!important}
+.backup-buttons{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:12px 0 5px}
+.backup-buttons .btn{margin:0!important}
+.btn-quiet{border:1px solid #d7ded2;background:#f8faf6;color:#697c6e}
+.backup-caution{font-size:12px!important;line-height:1.65!important;color:#7c6c57!important;margin:13px 0 0!important}
+.snapshot-select{flex:1;max-width:390px;min-width:160px}
+@media(max-width:620px){.backup-buttons{flex-direction:column;align-items:stretch}.backup-buttons .btn,.backup-buttons .snapshot-select{width:100%;max-width:none}}

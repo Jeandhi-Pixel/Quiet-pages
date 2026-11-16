@@ -4,7 +4,7 @@
 // No remote requests, third-party scripts, accounts, or analytics.
 const VAULT_KEY = 'quietpages.encrypted.v1';
 const ITERATIONS = 310000;
-const MAX_BACKUP_BYTES = 4 * 1024 * 1024;
+const MAX_BACKUP_BYTES = 25 * 1024 * 1024;
 const moods = { great: 'Great', good: 'Good', okay: 'Okay', low: 'Low', rough: 'Rough' };
 const $ = id => document.getElementById(id);
 const encoder = new TextEncoder();
@@ -24,6 +24,15 @@ let checkingUpdate = false;
 let updateReady = false;
 let applyingUpdate = false;
 let updateCheckTimer = null;
+// v3: encrypted primary vault in IndexedDB; browser localStorage is migration-only.
+let currentEncryptedEnvelope = null;
+let migratedFromLegacy = false;
+let backupDirectory = null;
+let backupFolderTimer = null;
+let externalBackupQueue = Promise.resolve();
+let lastFolderBackupAt = null;
+let folderError = '';
+
 
 function localDateKey(date) {
   const d = new Date(date);
@@ -104,7 +113,7 @@ function setSaveState(message, busy = false) {
   $('save-state').append(dot, document.createTextNode(message));
 }
 function renderGate() {
-  const created = Boolean(localStorage.getItem(VAULT_KEY));
+  const created = Boolean(currentEncryptedEnvelope);
   $('gate').hidden = false; $('app').hidden = true;
   $('confirm-wrap').hidden = created;
   $('gate-title').textContent = created ? 'Welcome back.' : 'A quiet place for your thoughts.';
@@ -126,7 +135,7 @@ async function gateSubmit(event) {
   const submit = $('gate-submit');
   submit.disabled = true; submit.textContent = 'Opening your journal…'; setGateError('');
   try {
-    const existing = rawEnvelope();
+    const existing = currentEncryptedEnvelope;
     if (existing) {
       const key = await deriveKey(password, unb64(existing.salt), existing.iterations);
       const decrypted = await decryptPayload(existing, key);
@@ -138,7 +147,8 @@ async function gateSubmit(event) {
       const key = await deriveKey(password, salt, ITERATIONS);
       const empty = {version:1,entries:Object.create(null)};
       const envelope = await encryptPayload(empty, key, salt);
-      localStorage.setItem(VAULT_KEY, JSON.stringify(envelope));
+      await QuietDB.saveVault(envelope, {forceSnapshot:true});
+      currentEncryptedEnvelope = envelope;
       masterKey = key; saltBytes = salt; vault = empty;
     }
     unlocked = true; saveQueue = Promise.resolve(); saveNumber = 0;
@@ -147,11 +157,16 @@ async function gateSubmit(event) {
     $('gate').hidden = true; $('app').hidden = false;
     showTab('write'); loadEditor(); updateCount(); updateTodayLabel();
     requestPersistentStorage();
+    await initializeBackupUI();
+    if (migratedFromLegacy) {
+      migratedFromLegacy = false;
+      showToast('Your previous journal was migrated safely. Export a backup now.');
+    }
   } catch (err) {
     setGateError(err.name === 'OperationError' ? 'Incorrect password, or the journal is damaged.' :
       (err instanceof DOMException && err.name === 'QuotaExceededError' ? 'Device storage is full. Free space and try again.' : err.message || 'Could not unlock the journal.'));
   } finally {
-    submit.disabled = false; submit.textContent = localStorage.getItem(VAULT_KEY) ? 'Unlock journal' : 'Create my journal';
+    submit.disabled = false; submit.textContent = currentEncryptedEnvelope ? 'Unlock journal' : 'Create my journal';
   }
 }
 function updateCount() {
@@ -203,7 +218,9 @@ function queueSave() {
   saveQueue = saveQueue.catch(() => {}).then(async () => {
     const data = JSON.parse(snapshot);
     const env = await encryptPayload(data, masterKey, saltBytes);
-    localStorage.setItem(VAULT_KEY, JSON.stringify(env));
+    await QuietDB.saveVault(env);
+    currentEncryptedEnvelope = env;
+    scheduleFolderBackup();
     if (n === saveNumber) setSaveState('All changes saved');
   }).catch(err => {
     setSaveState('Save failed — try again');
@@ -243,6 +260,10 @@ function showTab(tab) {
   });
   for (const name of ['write','history','backup']) $('view-'+name).hidden = name !== tab;
   if (tab === 'history') renderHistory();
+  if (tab === 'backup') {
+    refreshSnapshots().catch(() => {});
+    refreshFolderStatus().catch(() => {});
+  }
 }
 function renderHistory() {
   const root = $('history-list'); root.replaceChildren();
@@ -266,7 +287,9 @@ function renderHistory() {
   }
 }
 async function lockJournal() {
-  try {await flushEditor();} catch (_) {showToast('Could not save. Your journal remains open.');return;}
+  try {await flushEditor();
+    clearTimeout(backupFolderTimer);
+    if (backupDirectory) await attemptAutomaticFolderBackup();} catch (_) {showToast('Could not save. Your journal remains open.');return;}
   unlocked = false;
   masterKey = null; saltBytes = null; vault = null;
   $('entry-body').value=''; $('entry-title').value='';
@@ -275,9 +298,9 @@ async function lockJournal() {
 }
 function downloadBackup() {
   flushEditor().then(() => {
-    const raw = localStorage.getItem(VAULT_KEY);
-    if (!raw) throw new Error('No backup available.');
-    const blob = new Blob([JSON.stringify(JSON.parse(raw),null,2)],{type:'application/json'});
+    const encrypted = currentEncryptedEnvelope;
+    if (!encrypted) throw new Error('No backup available.');
+    const blob = new Blob([JSON.stringify(encrypted,null,2)],{type:'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href=url; a.download=`quiet-pages-backup-${localDateKey(new Date())}.json`;
     document.body.append(a);a.click();a.remove();
@@ -308,17 +331,190 @@ async function restoreBackup() {
     if (!confirm(`Replace your current journal with this backup (${Object.keys(restored.entries).length} entries)? This cannot be undone unless you exported your current journal.`))return;
     await flushEditor();
     // Only replace the current journal after the supplied file is successfully decrypted.
-    localStorage.setItem(VAULT_KEY,JSON.stringify(pendingBackup));
+    // Save a recovery point of the prior journal before replacing it.
+    await QuietDB.saveVault(currentEncryptedEnvelope, {forceSnapshot:true});
+    await QuietDB.saveVault(pendingBackup, {forceSnapshot:true});
+    currentEncryptedEnvelope=pendingBackup;
     masterKey=key;saltBytes=unb64(pendingBackup.salt);vault=restored;
     selectedDate=localDateKey(new Date());
     pendingBackup=null;$('import-panel').hidden=true;
     showTab('write');loadEditor();updateCount();
+    await refreshSnapshots();
+    scheduleFolderBackup();
     showToast('Backup restored successfully.');
   } catch(e) {showToast(e.name==='OperationError' ? 'Incorrect backup password or damaged backup.' : (e.message||'Restore failed.'));}
   finally{btn.disabled=false;}
 }
 
-// Update only application files, never the localStorage vault.
+// Automatic encrypted backups to a user-selected folder outside private browser storage.
+// Chrome Android 132+ supports this. Folder access may expire when Chrome closes.
+async function refreshFolderStatus() {
+  const status = $('folder-backup-status');
+  const detail = $('folder-backup-meta');
+  const selected = Boolean(backupDirectory);
+  $('choose-backup-folder').textContent = selected ? 'Change backup folder' : 'Choose backup folder';
+  $('backup-now').hidden = !selected;
+  $('reauthorize-folder').hidden = !selected;
+  $('disable-folder').hidden = !selected;
+  if (!selected) {
+    status.textContent = 'Not configured — manual backups only.';
+    detail.textContent = 'Choose a folder in Android Files or Chrome to enable encrypted backups while the app is open.';
+    return;
+  }
+  let permission = 'prompt';
+  try { permission = await backupDirectory.queryPermission({mode:'readwrite'}); }
+  catch (_) { permission = 'denied'; }
+  $('reauthorize-folder').hidden = permission === 'granted';
+  const name = backupDirectory.name || 'Selected folder';
+  if (permission === 'granted') {
+    status.textContent = `Automatic folder backups active · ${name}`;
+  } else {
+    status.textContent = `Paused — folder permission required · ${name}`;
+  }
+  const time = lastFolderBackupAt ? new Date(lastFolderBackupAt).toLocaleString() : 'Never';
+  detail.textContent = `Last successful folder backup: ${time}. ${folderError ? 'Problem: ' + folderError : 'Files are encrypted and grouped by date and hour.'}`;
+}
+function scheduleFolderBackup() {
+  if (!backupDirectory || !unlocked || !currentEncryptedEnvelope) return;
+  clearTimeout(backupFolderTimer);
+  // Wait for a pause in typing. App must remain open; this is not a background alarm.
+  backupFolderTimer = setTimeout(() => {attemptAutomaticFolderBackup().catch(() => {});}, 4500);
+}
+async function writeEncryptedFolderFile(envelope) {
+  if (!backupDirectory) return false;
+  if (await backupDirectory.queryPermission({mode:'readwrite'}) !== 'granted') {
+    folderError = 'Permission expired. Tap Reauthorize folder.';
+    await refreshFolderStatus();
+    return false;
+  }
+  const filename = `quiet-pages-auto-${localDateKey(new Date())}-${String(new Date().getHours()).padStart(2, '0')}.json`;
+  // One file per active hour: later saves replace the current hour, not earlier hours.
+  const file = await backupDirectory.getFileHandle(filename, {create:true});
+  const stream = await file.createWritable();
+  try {
+    await stream.write(JSON.stringify(envelope,null,2));
+    await stream.close();
+  } catch (error) {
+    try {await stream.abort();} catch (_) {}
+    throw error;
+  }
+  lastFolderBackupAt = Date.now();
+  folderError = '';
+  await QuietDB.setSetting('folderBackupTime', lastFolderBackupAt);
+  await refreshFolderStatus();
+  return true;
+}
+function attemptAutomaticFolderBackup() {
+  if (!backupDirectory || !unlocked || !currentEncryptedEnvelope) return Promise.resolve(false);
+  // Capture precisely the last saved encrypted envelope, never unsaved plaintext.
+  const envelope = currentEncryptedEnvelope;
+  externalBackupQueue = externalBackupQueue.catch(() => {}).then(async () => {
+    try {return await writeEncryptedFolderFile(envelope);}
+    catch (error) {
+      folderError = error.message || 'Could not write the backup file.';
+      await refreshFolderStatus();
+      return false;
+    }
+  });
+  return externalBackupQueue;
+}
+async function chooseBackupDirectory() {
+  if (typeof window.showDirectoryPicker !== 'function') {
+    showToast('Folder access requires Chrome 132+ on Android. Manual export remains available.');
+    return;
+  }
+  try {
+    // Open picker directly inside the click handler to retain user activation.
+    const handle = await window.showDirectoryPicker({mode:'readwrite', id:'quietpages-backups'});
+    // Do not replace previous settings if the new handle cannot be saved.
+    await QuietDB.setSetting('folderHandle', handle);
+    backupDirectory = handle;
+    folderError = '';
+    await refreshFolderStatus();
+    await flushEditor();
+    if (await attemptAutomaticFolderBackup()) showToast('Automatic encrypted backups enabled.');
+    else showToast('Folder chosen. You may need to allow write access.');
+  } catch (error) {
+    if (error.name !== 'AbortError') showToast(error.message || 'Could not choose backup folder.');
+  }
+}
+async function reauthorizeBackupDirectory() {
+  if (!backupDirectory) return;
+  try {
+    // Permission request must originate from a user tap.
+    const state = await backupDirectory.requestPermission({mode:'readwrite'});
+    if (state !== 'granted') throw new Error('Write permission was not granted.');
+    folderError = '';
+    await refreshFolderStatus();
+    await flushEditor();
+    if (await attemptAutomaticFolderBackup()) showToast('Encrypted folder backups resumed.');
+  } catch (error) {showToast(error.message || 'Folder access failed.');}
+}
+async function backupToFolderNow() {
+  if (!backupDirectory) return;
+  try {
+    await flushEditor();
+    const success = await attemptAutomaticFolderBackup();
+    if (success) showToast('Encrypted backup saved to your selected folder.');
+    else showToast('Folder backup paused. Reauthorize folder access.');
+  } catch (error) {showToast(error.message || 'Folder backup failed.');}
+}
+async function disableBackupFolder() {
+  clearTimeout(backupFolderTimer);
+  // Existing exported files remain untouched in the selected directory.
+  await QuietDB.clearSetting('folderHandle');
+  backupDirectory = null;
+  folderError = '';
+  await refreshFolderStatus();
+  showToast('Automatic folder backup disabled. Existing files were kept.');
+}
+async function refreshSnapshots() {
+  const items = await QuietDB.listSnapshots();
+  const select = $('snapshot-select');
+  const chosen = select.value;
+  select.replaceChildren();
+  for (const item of items) {
+    const option = new Option(new Date(item.at).toLocaleString(), String(item.id));
+    select.add(option);
+  }
+  if (items.some(i => String(i.id) === chosen)) select.value = chosen;
+  $('restore-snapshot').disabled = items.length === 0;
+  $('snapshot-summary').textContent = `${items.length} encrypted local restore ${items.length === 1 ? 'point' : 'points'} (maximum 20). These disappear if Chrome deletes site data.`;
+}
+async function restoreLocalSnapshot() {
+  const record = await QuietDB.getSnapshot($('snapshot-select').value);
+  if (!record) {showToast('Restore point no longer available.');return;}
+  try {
+    // Verify with the current encryption key before any destructive operation.
+    const restored = await decryptPayload(validateEnvelope(record.envelope), masterKey);
+    const display = new Date(record.at).toLocaleString();
+    if (!confirm(`Replace your journal with its local restore point from ${display}? Export a backup of the current journal first.`)) return;
+    await flushEditor();
+    await QuietDB.saveVault(currentEncryptedEnvelope, {forceSnapshot:true});
+    await QuietDB.saveVault(record.envelope, {forceSnapshot:true});
+    currentEncryptedEnvelope = record.envelope;
+    vault = restored;
+    selectedDate = localDateKey(new Date());
+    showTab('write'); loadEditor(); updateCount();
+    await refreshSnapshots();
+    scheduleFolderBackup();
+    showToast('Local restore point recovered.');
+  } catch (error) {
+    showToast(error.name === 'OperationError' ? 'This restore point needs a different journal password.' : (error.message || 'Could not restore this point.'));
+  }
+}
+async function initializeBackupUI() {
+  try {
+    backupDirectory = await QuietDB.getSetting('folderHandle');
+    lastFolderBackupAt = await QuietDB.getSetting('folderBackupTime');
+    await refreshFolderStatus();
+    await refreshSnapshots();
+    // A saved folder permission may survive reload, but we do not prompt automatically.
+    scheduleFolderBackup();
+  } catch (error) {showToast('Could not load backup settings. Export a manual backup.');}
+}
+
+// App updates only application files; never IndexedDB or journal backups.
 function setUpdateBanner(visible) {
   $('update-banner').hidden = !visible;
 }
@@ -396,9 +592,25 @@ function setupAppUpdates() {
   window.setInterval(checkForAppUpdates, 15 * 60 * 1000);
 }
 
-function init() {
-  try {localStorage.getItem(VAULT_KEY);} catch (_) {
-    $('gate').innerHTML='<div class="gate-panel"><h1>Storage unavailable</h1><p>Enable site storage in your browser before using this journal.</p></div>';
+async function init() {
+  try {
+    await QuietDB.open();
+    let stored = await QuietDB.getVault();
+    if (!stored) {
+      // Read old browser localStorage only during migration. Preserve it as a
+      // read-only legacy safety copy, never remove it automatically.
+      const previous = rawEnvelope();
+      if (previous) {
+        await QuietDB.saveVault(previous, {forceSnapshot:true});
+        stored = previous;
+        migratedFromLegacy = true;
+      }
+    }
+    currentEncryptedEnvelope = stored ? validateEnvelope(stored) : null;
+  } catch (error) {
+    $('gate').innerHTML='<div class="gate-panel"><h1>Journal database unavailable</h1><p>We did not change your original journal. ' +
+      'Check Chrome storage settings, or close other Quiet Pages tabs and reopen. Do not clear site data.</p></div>';
+    console.error('Quiet Pages database initialization failed:', error.name);
     return;
   }
   if (!globalThis.crypto?.subtle) {
@@ -416,14 +628,26 @@ function init() {
   document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
   $('search-input').addEventListener('input',renderHistory);
   $('lock-btn').addEventListener('click',lockJournal);
-  $('delete-entry').addEventListener('click',()=>{
-    if (!confirm('Delete this entry? This cannot be undone.')) return;
-    $('entry-title').value='';$('entry-body').value='';updateMood(null);scheduleSave();showToast('Entry deleted.');
+  $('delete-entry').addEventListener('click',async () => {
+    if (!confirm('Delete this entry? You can recover a previous restore point if one exists.')) return;
+    try {
+      // Make an encrypted recovery point BEFORE any destructive change.
+      await flushEditor();
+      await QuietDB.saveVault(currentEncryptedEnvelope, {forceSnapshot:true});
+      $('entry-title').value='';$('entry-body').value='';updateMood(null);
+      scheduleSave();
+      showToast('Entry deleted. A recovery point was saved.');
+    } catch (_) {showToast('Could not create a safety copy; entry was not deleted.');}
   });
   $('export-btn').addEventListener('click',downloadBackup);
   $('import-file').addEventListener('change',chooseBackup);
   $('import-confirm').addEventListener('click',restoreBackup);
   $('import-password').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();restoreBackup();}});
+  $('choose-backup-folder').addEventListener('click', chooseBackupDirectory);
+  $('reauthorize-folder').addEventListener('click', reauthorizeBackupDirectory);
+  $('backup-now').addEventListener('click', backupToFolderNow);
+  $('disable-folder').addEventListener('click', () => disableBackupFolder().catch(()=>showToast('Could not disable backup folder.')));
+  $('restore-snapshot').addEventListener('click', restoreLocalSnapshot);
   window.addEventListener('pagehide',()=>{if(unlocked)flushEditor().catch(()=>{});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden && unlocked)flushEditor().catch(()=>{});});
   const online=()=>{$('network-state').textContent=navigator.onLine?'Offline-ready journal':'Working offline';};

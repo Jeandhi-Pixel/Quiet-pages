@@ -11,6 +11,7 @@
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./styles.css">
   <title>Quiet Pages — Private Journal</title>
+  <script defer src="./db.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -41,7 +42,7 @@
         <p id="gate-error" role="alert" class="form-error" hidden></p>
         <button id="gate-submit" class="btn btn-primary btn-full" type="submit">Create my journal</button>
       </form>
-      <div class="gate-notes"><span class="note-dot"></span><span>No account. No cloud sync. No trackers.</span></div>
+      <div class="gate-notes"><span class="note-dot"></span><span>No account. Encrypted local database. No trackers.</span></div>
       <p class="gate-warning" id="gate-warning">Keep your password somewhere safe. Without it, your journal cannot be recovered.</p>
     </div>
   </section>
@@ -121,11 +122,33 @@
 
       <section id="view-backup" class="view" aria-label="Backup and privacy" hidden>
         <div class="section-head"><div><p class="card-kicker">KEEP YOUR WORDS SAFE</p><h2>Backup & privacy</h2></div></div>
+        <div class="settings-card"><div class="settings-symbol" aria-hidden="true">▤</div><div class="settings-content settings-wide">
+          <h3>Automatic encrypted folder backups</h3>
+          <p>Choose a folder outside Chrome's private storage. While Quiet Pages is open and access is granted, it automatically updates one encrypted backup file per active hour after you stop typing. Previous hours' files stay in the folder.</p>
+          <p id="folder-backup-status" class="backup-status" role="status">Checking folder backups…</p>
+          <p id="folder-backup-meta">Your existing entries stay private, even inside backup files.</p>
+          <div class="backup-buttons">
+            <button id="choose-backup-folder" class="btn btn-primary" type="button">Choose backup folder</button>
+            <button id="reauthorize-folder" class="btn btn-outline" type="button" hidden>Reauthorize folder</button>
+            <button id="backup-now" class="btn btn-outline" type="button" hidden>Back up now</button>
+            <button id="disable-folder" class="btn btn-quiet" type="button" hidden>Disconnect folder</button>
+          </div>
+          <p class="backup-caution">An on-phone backup does not protect against a lost or damaged phone. Copy these encrypted files to another device or a cloud-synced folder. Chrome may request access again after restarting; backups cannot run while the app is completely closed.</p>
+        </div></div>
+        <div class="settings-card"><div class="settings-symbol" aria-hidden="true">◷</div><div class="settings-content settings-wide">
+          <h3>Automatic local restore points</h3>
+          <p>Quiet Pages stores periodic encrypted historical copies in its dedicated IndexedDB database. Select a point to recover older entries after a mistake.</p>
+          <p id="snapshot-summary" class="backup-status">Checking restore points…</p>
+          <div class="backup-buttons"><select id="snapshot-select" class="text-input snapshot-select" aria-label="Choose a restore point"></select>
+            <button id="restore-snapshot" class="btn btn-outline" type="button" disabled>Restore selected point</button>
+          </div>
+          <p class="backup-caution">Local restore points are not independent backups: clearing Chrome site data also erases them. An older restore point may require the password used when it was created.</p>
+        </div></div>
         <div class="settings-card"><div class="settings-symbol" aria-hidden="true">↓</div><div class="settings-content"><h3>Export an encrypted backup</h3><p>Download all your entries in an encrypted file. You will need your journal password to restore it.</p><button id="export-btn" class="btn btn-primary" type="button">Download backup</button></div></div>
         <div class="settings-card"><div class="settings-symbol" aria-hidden="true">↑</div><div class="settings-content"><h3>Restore an encrypted backup</h3><p>Restore a backup file made by Quiet Pages. This will replace the journal currently on this device.</p><label class="btn btn-outline file-button" for="import-file">Choose backup file</label><input id="import-file" type="file" accept=".json,application/json" hidden>
           <div id="import-panel" class="import-panel" hidden><p id="import-filename"></p><label class="field-label" for="import-password">Password for this backup</label><input id="import-password" class="text-input" type="password" autocomplete="off" placeholder="Backup password"><button id="import-confirm" class="btn btn-primary" type="button">Restore this backup</button></div>
         </div></div>
-        <div class="privacy-note"><h3>Good to know</h3><p>Everything you write is encrypted using AES-GCM, with a key derived from your password. Nothing is transmitted to our servers; there are no accounts, analytics, or ads. Clearing browser site data or uninstalling the app may delete your entries, so download backups regularly. Your password cannot be reset.</p></div>
+        <div class="privacy-note"><h3>Good to know</h3><p>Entries are encrypted using AES-GCM and stored in a dedicated browser IndexedDB database. Nothing is uploaded to GitHub or our servers. Automatic folder backups are encrypted files written only to your chosen folder while access is allowed. Local restore points are erased along with browser site data; external files may remain. Back up outside your phone for loss protection. Your password cannot be reset.</p></div>
       </section>
     </main>
     <footer class="app-footer"><span>Made for quieter moments.</span><span id="network-state">Private by design</span></footer>

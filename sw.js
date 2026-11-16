@@ -1,11 +1,11 @@
 /* Quiet Pages updater: checks published app files without touching journal data.
- * The journal is stored separately in window.localStorage, not in these caches.
+ * The journal is stored in IndexedDB, not in these application caches.
  * Subsequent releases do not require changing this worker or a version number.
  */
-const SHELL_CACHE = 'quietpages-shell-auto-v2';
-const STAGING_CACHE = 'quietpages-shell-staging-v2';
+const SHELL_CACHE = 'quietpages-shell-auto-v3';
+const STAGING_CACHE = 'quietpages-shell-staging-v3';
 const SHELL_FILES = [
-  './index.html', './styles.css', './app.js', './manifest.webmanifest',
+  './index.html', './styles.css', './db.js', './app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'
 ];
 const ROOT_URL = new URL('./', self.registration.scope).href;
