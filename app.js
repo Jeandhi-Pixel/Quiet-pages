@@ -20,6 +20,10 @@ let saveNumber = 0;
 let currentTab = 'write';
 let toastTimer = null;
 let unlocked = false;
+let checkingUpdate = false;
+let updateReady = false;
+let applyingUpdate = false;
+let updateCheckTimer = null;
 
 function localDateKey(date) {
   const d = new Date(date);
@@ -313,6 +317,85 @@ async function restoreBackup() {
   } catch(e) {showToast(e.name==='OperationError' ? 'Incorrect backup password or damaged backup.' : (e.message||'Restore failed.'));}
   finally{btn.disabled=false;}
 }
+
+// Update only application files, never the localStorage vault.
+function setUpdateBanner(visible) {
+  $('update-banner').hidden = !visible;
+}
+function checkForAppUpdates() {
+  if (!navigator.onLine || !('serviceWorker' in navigator) ||
+      !navigator.serviceWorker.controller || checkingUpdate || updateReady || applyingUpdate) return;
+  checkingUpdate = true;
+  clearTimeout(updateCheckTimer);
+  updateCheckTimer = setTimeout(() => { checkingUpdate = false; }, 20000);
+  navigator.serviceWorker.controller.postMessage({type:'CHECK_FOR_UPDATES'});
+}
+function onWorkerMessage(event) {
+  const type = event.data?.type;
+  if (!['UPDATE_AVAILABLE','UPDATE_NONE','UPDATE_CHECK_FAILED'].includes(type)) return;
+  clearTimeout(updateCheckTimer);
+  checkingUpdate = false;
+  if (type === 'UPDATE_AVAILABLE') {
+    updateReady = true;
+    setUpdateBanner(true);
+  }
+}
+async function installAppUpdate() {
+  if (applyingUpdate || !navigator.serviceWorker?.controller) return;
+  applyingUpdate = true;
+  // Freeze editing during the brief save-and-reload step to prevent late unsaved keystrokes.
+  $('app').inert = true;
+  $('gate').inert = true;
+  const button = $('update-now');
+  button.disabled = true;
+  button.textContent = 'Updating…';
+  try {
+    // Prevent a restart before the latest diary edit is encrypted and saved.
+    if (unlocked) await flushEditor();
+    const worker = navigator.serviceWorker.controller;
+    await new Promise((resolve, reject) => {
+      const channel = new MessageChannel();
+      const timeout = setTimeout(() => {channel.port1.close(); reject(new Error('Update timed out. Please try again.'));}, 20000);
+      channel.port1.onmessage = event => {
+        clearTimeout(timeout);channel.port1.close();
+        if (event.data?.type === 'UPDATE_APPLIED') resolve();
+        else reject(new Error(event.data?.message || 'Update failed.'));
+      };
+      worker.postMessage({type:'APPLY_UPDATE'}, [channel.port2]);
+    });
+    location.reload();
+  } catch (error) {
+    showToast(error.message || 'Could not update. Please try again.');
+    button.disabled = false;
+    button.textContent = 'Update now';
+    applyingUpdate = false;
+    $('app').inert = false;
+    $('gate').inert = false;
+    updateReady = false;
+    setUpdateBanner(false);
+    checkForAppUpdates();
+  }
+}
+function setupAppUpdates() {
+  $('update-now').addEventListener('click',installAppUpdate);
+  $('update-later').addEventListener('click',()=>setUpdateBanner(false));
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.addEventListener('message',onWorkerMessage);
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    checkingUpdate = false;
+    clearTimeout(updateCheckTimer);
+    setTimeout(checkForAppUpdates,1200);
+  });
+  navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'})
+    .then(()=>navigator.serviceWorker.ready.then(checkForAppUpdates))
+    .catch(()=>{});
+  window.addEventListener('online',checkForAppUpdates);
+  document.addEventListener('visibilitychange',()=>{
+    if (!document.hidden) checkForAppUpdates();
+  });
+  window.setInterval(checkForAppUpdates, 15 * 60 * 1000);
+}
+
 function init() {
   try {localStorage.getItem(VAULT_KEY);} catch (_) {
     $('gate').innerHTML='<div class="gate-panel"><h1>Storage unavailable</h1><p>Enable site storage in your browser before using this journal.</p></div>';
@@ -345,6 +428,6 @@ function init() {
   document.addEventListener('visibilitychange',()=>{if(document.hidden && unlocked)flushEditor().catch(()=>{});});
   const online=()=>{$('network-state').textContent=navigator.onLine?'Offline-ready journal':'Working offline';};
   window.addEventListener('online',online);window.addEventListener('offline',online);online();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(()=>{});
+  setupAppUpdates();
 }
 document.addEventListener('DOMContentLoaded',init);
