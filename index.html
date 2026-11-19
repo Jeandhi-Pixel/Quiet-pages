@@ -4,14 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f5ef">
-  <meta name="description" content="A private, offline-first journal that belongs to you.">
+  <meta name="description" content="Your private, offline-first journal and personal routines.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
   <link rel="stylesheet" href="./styles.css">
-  <title>Quiet Pages — Private Journal</title>
+  <link rel="stylesheet" href="./spaces.css">
+  <title>Quiet Spaces — Your Private Space</title>
   <script defer src="./db.js"></script>
+  <script defer src="./spaces.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -22,7 +24,7 @@
     <div class="gate-panel">
       <div class="brand brand-large">
         <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 36 36" fill="none"><path d="M7 29c13-1 20-8 22-22C16 8 8 16 7 29Z" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 28 24 12" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg></div>
-        <div class="brand-name">quiet pages<span class="brand-period">.</span></div>
+        <div class="brand-name">quiet spaces<span class="brand-period">.</span></div>
       </div>
       <div class="gate-art" aria-hidden="true">
         <div class="art-moon"></div><div class="art-hill art-hill-back"></div><div class="art-hill art-hill-front"></div><div class="art-leaf art-leaf-one"></div><div class="art-leaf art-leaf-two"></div>
@@ -49,7 +51,7 @@
 
   <aside id="update-banner" class="update-banner" role="status" aria-live="polite" hidden>
     <div class="update-copy">
-      <strong>Quiet Pages update available</strong>
+      <strong>Quiet Spaces update available</strong>
       <p>A new version is ready. Your journal will stay on this device.</p>
     </div>
     <div class="update-actions">
@@ -62,7 +64,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark brand-mark-small" aria-hidden="true"><svg viewBox="0 0 36 36" fill="none"><path d="M7 29c13-1 20-8 22-22C16 8 8 16 7 29Z" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 28 24 12" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg></div>
-        <span class="brand-name">quiet pages<span class="brand-period">.</span></span>
+        <span class="brand-name">quiet spaces<span class="brand-period">.</span></span>
       </div>
       <div class="topbar-right">
         <span class="entry-stat" id="entry-count">0 entries</span>
@@ -81,6 +83,10 @@
         <button class="tab active" type="button" data-tab="write" aria-current="page">Write</button>
         <button class="tab" type="button" data-tab="history">Past entries</button>
         <button class="tab" type="button" data-tab="backup">Backup & privacy</button>
+        <button class="tab" type="button" data-tab="today">Today</button>
+        <button class="tab" type="button" data-tab="exercise">Exercise</button>
+        <button class="tab" type="button" data-tab="selfcare">Self-care</button>
+        <button class="tab" type="button" data-tab="routines-settings">Routines settings</button>
       </nav>
 
       <section id="view-write" class="view" aria-label="Write journal entry">
@@ -149,6 +155,111 @@
           <div id="import-panel" class="import-panel" hidden><p id="import-filename"></p><label class="field-label" for="import-password">Password for this backup</label><input id="import-password" class="text-input" type="password" autocomplete="off" placeholder="Backup password"><button id="import-confirm" class="btn btn-primary" type="button">Restore this backup</button></div>
         </div></div>
         <div class="privacy-note"><h3>Good to know</h3><p>Entries are encrypted using AES-GCM and stored in a dedicated browser IndexedDB database. Nothing is uploaded to GitHub or our servers. Automatic folder backups are encrypted files written only to your chosen folder while access is allowed. Local restore points are erased along with browser site data; external files may remain. Back up outside your phone for loss protection. Your password cannot be reset.</p></div>
+      </section>
+
+      <section id="view-today" class="view" aria-label="Today's routines" hidden>
+        <div class="section-head"><div><p class="card-kicker">YOUR DAILY RHYTHM</p><h2>One gentle step at a time.</h2></div></div>
+        <div class="spaces-panel spaces-date-panel">
+          <label class="field-label" for="spaces-date">Routine date</label>
+          <input id="spaces-date" class="text-input" type="date">
+          <button id="spaces-today-button" class="btn btn-outline" type="button">Today</button>
+        </div>
+        <div id="spaces-today-content" class="spaces-content"></div>
+      </section>
+      <section id="view-exercise" class="view" aria-label="Exercise plan" hidden>
+        <div class="section-head"><div><p class="card-kicker">WEEKLY CURVES</p><h2>Movement at your pace.</h2></div></div>
+        <p class="spaces-muted">Two strength days and two yoga sessions per week. Check off exercises individually; your history is encrypted.</p>
+        <div id="spaces-exercise-content" class="spaces-content"></div>
+      </section>
+      <section id="view-selfcare" class="view" aria-label="Skincare and haircare" hidden>
+        <div class="section-head"><div><p class="card-kicker">YOUR SELF-CARE</p><h2>Feel good in your own skin.</h2></div></div>
+        <p class="spaces-muted">Mark each scheduled AM or PM application as done or skipped. Previous unmarked days show as missed, without penalties.</p>
+        <div id="spaces-selfcare-content" class="spaces-content"></div>
+        <div class="spaces-panel">
+          <div class="spaces-workout-header"><h3>Your products</h3><button id="spaces-add-product" class="btn btn-primary" type="button">+ Add product</button></div>
+          <div id="spaces-product-list"></div>
+        </div>
+        <div id="spaces-product-editor" class="spaces-panel" hidden>
+          <h3 id="spaces-product-heading">Add a product</h3>
+          <form id="spaces-product-form">
+            <label class="field-label" for="spaces-product-name">Product name</label>
+            <input class="text-input" id="spaces-product-name" required maxlength="110" autocomplete="off">
+            <label class="field-label" for="spaces-product-category">Category</label>
+            <select class="text-input" id="spaces-product-category">
+              <option value="skin">Skincare</option><option value="hair">Haircare</option><option value="other">Other</option>
+            </select>
+            <p class="field-label">Application time</p>
+            <div class="spaces-choice-row">
+              <label><input type="checkbox" id="spaces-product-am"> Morning · AM</label>
+              <label><input type="checkbox" id="spaces-product-pm"> Before bed · PM</label>
+            </div>
+            <label class="field-label" for="spaces-product-frequency">Frequency</label>
+            <select class="text-input" id="spaces-product-frequency">
+              <option value="daily">Every day</option>
+              <option value="interval">Every N days</option>
+              <option value="weekdays">Selected weekdays</option>
+            </select>
+            <div id="spaces-interval-fields" hidden>
+              <label class="field-label" for="spaces-product-interval">Repeat every (days)</label>
+              <input id="spaces-product-interval" class="text-input" type="number" min="2" max="90" value="2">
+              <label class="field-label" for="spaces-product-anchor">First scheduled date</label>
+              <input id="spaces-product-anchor" class="text-input" type="date">
+            </div>
+            <div id="spaces-weekday-fields" hidden>
+              <p class="field-label">Scheduled weekdays</p>
+              <div class="spaces-choice-row">
+                <label><input data-space-weekday="1" type="checkbox"> Mon</label>
+                <label><input data-space-weekday="2" type="checkbox"> Tue</label>
+                <label><input data-space-weekday="3" type="checkbox"> Wed</label>
+                <label><input data-space-weekday="4" type="checkbox"> Thu</label>
+                <label><input data-space-weekday="5" type="checkbox"> Fri</label>
+                <label><input data-space-weekday="6" type="checkbox"> Sat</label>
+                <label><input data-space-weekday="0" type="checkbox"> Sun</label>
+              </div>
+            </div>
+            <label class="field-label" for="spaces-product-notes">Notes (optional)</label>
+            <textarea id="spaces-product-notes" class="text-input" rows="3" maxlength="500"></textarea>
+            <label class="spaces-checkbox-line"><input type="checkbox" id="spaces-product-remind"> Include this product in future reminders</label>
+            <div class="spaces-form-actions">
+              <button type="submit" class="btn btn-primary">Save product</button>
+              <button type="button" id="spaces-product-cancel" class="btn btn-outline">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </section>
+      <section id="view-routines-settings" class="view" aria-label="Routine settings" hidden>
+        <div class="section-head"><div><p class="card-kicker">PERSONALIZE</p><h2>Your routines, your rhythm.</h2></div></div>
+        <div class="spaces-panel">
+          <h3>Reminder preferences</h3>
+          <p class="spaces-muted">Saved for Capacitor later. Browser notifications are not activated in this version.</p>
+          <label class="field-label" for="spaces-am-time">Morning reminder</label>
+          <input class="text-input" type="time" id="spaces-am-time">
+          <label class="field-label" for="spaces-pm-time">Before-bed reminder</label>
+          <input class="text-input" type="time" id="spaces-pm-time">
+          <label class="spaces-checkbox-line"><input id="spaces-discreet" type="checkbox"> Use discreet wording on lock-screen notifications</label>
+        </div>
+        <div class="spaces-panel">
+          <h3>Weekly Curves plan</h3>
+          <label class="field-label" for="spaces-strength-a">Strength A</label>
+          <select id="spaces-strength-a" class="text-input">
+            <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+          </select>
+          <label class="field-label" for="spaces-strength-b">Strength B</label>
+          <select id="spaces-strength-b" class="text-input">
+            <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+          </select>
+          <p class="field-label">Yoga days</p>
+          <div class="spaces-choice-row">
+            <label><input type="checkbox" data-space-yoga="0"> Sun</label>
+            <label><input type="checkbox" data-space-yoga="1"> Mon</label>
+            <label><input type="checkbox" data-space-yoga="2"> Tue</label>
+            <label><input type="checkbox" data-space-yoga="3"> Wed</label>
+            <label><input type="checkbox" data-space-yoga="4"> Thu</label>
+            <label><input type="checkbox" data-space-yoga="5"> Fri</label>
+            <label><input type="checkbox" data-space-yoga="6"> Sat</label>
+          </div>
+          <button id="spaces-save-settings" class="btn btn-primary" type="button">Save preferences</button>
+        </div>
       </section>
     </main>
     <footer class="app-footer"><span>Made for quieter moments.</span><span id="network-state">Private by design</span></footer>
