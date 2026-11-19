@@ -1,0 +1,57 @@
+name: Android debug APK
+
+on:
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'capacitor.config.json'
+      - 'scripts/**'
+      - 'index.html'
+      - 'app.js'
+      - 'spaces.js'
+      - 'exercise-guide.js'
+      - 'db.js'
+      - '*.css'
+      - 'icons/**'
+      - '.github/workflows/android-debug.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install web and Capacitor dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate Android project and stage app
+        run: npm run android:init
+      - name: Check Maven dependency access
+        run: |
+          curl --fail --location --silent --show-error --retry 2 --retry-delay 2 --output /dev/null https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
+      - name: Build Android debug APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug --no-daemon --refresh-dependencies
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: quiet-spaces-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+# Do NOT distribute recurring debug APKs as app updates: runners use
+# different ephemeral debug signing keys. A stable release needs one
+# private, persistent keystore, never committed to the public repo.
