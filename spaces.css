@@ -57,3 +57,31 @@
   #spaces-date-toolbar{margin-bottom:18px}
 }
 @media(prefers-reduced-motion:reduce){.spaces-category{transition:none}.spaces-category:hover{transform:none}}
+
+
+/* Expandable, beginner-friendly exercise guides. Everything works offline. */
+.spaces-exercise-entry{min-width:0}
+.spaces-exercise-title{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spaces-exercise-title strong{line-height:1.35}
+.spaces-help-trigger{flex:none;display:grid;place-items:center;width:28px;height:28px;padding:0;border-radius:50%;background:#f1eafa;border:1px solid #d6c8e9;color:#66518b;font:800 15px system-ui,sans-serif;cursor:pointer;transition:background .15s,border-color .15s}
+.spaces-help-trigger:hover,.spaces-help-trigger[aria-expanded="true"]{background:#dfd3f3;border-color:#a897c8}
+.spaces-help-trigger:focus-visible{outline:3px solid #a897c8;outline-offset:3px}
+.spaces-exercise-guide{padding:18px 20px 17px;border:1px solid #d9cfe8;background:#f8f5fd;border-radius:0 0 15px 15px;margin:-5px 0 12px;color:#41404b;animation:spaces-guide-enter .18s ease-out}
+.spaces-exercise-guide[hidden]{display:none}
+.spaces-guide-summary{font-size:13px;line-height:1.65;margin:4px 0 14px}
+.spaces-guide-label{display:block;font-size:12px;margin:14px 0 7px;color:#5a4a7f}
+.spaces-guide-cues{margin:0;padding-left:19px;color:#525065;line-height:1.7;font-size:12px}
+.spaces-guide-cues li{margin:3px 0}
+.spaces-guide-warning{font-size:12px;line-height:1.6;margin:12px 0 0;padding:10px 12px;border-radius:9px;background:#f1eaf7}
+.spaces-guide-note{font-size:11px;color:#706984;line-height:1.5;margin:10px 0 0}
+.spaces-motion{border:1px solid #e5dcf0;background:#fff;border-radius:13px;padding:10px 12px 8px}
+.spaces-motion svg{width:100%;max-width:455px;height:auto;display:block;margin:0 auto;overflow:visible}
+.spaces-figure{fill:none;stroke:#645783;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+.spaces-figure circle{fill:#f6f0fb}
+.spaces-figure .motion{stroke:#b18bc5;stroke-width:2.1;stroke-dasharray:3.5 4}
+.spaces-figure .guide{stroke:#b18bc5;stroke-width:1.4;stroke-dasharray:4 5}
+.spaces-motion-between{fill:none;stroke:#a68fbb;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.spaces-motion-captions{display:grid;grid-template-columns:1fr 1fr;gap:25px;text-align:center;font-size:11px;font-weight:700;color:#6b5a85}
+@keyframes spaces-guide-enter{from{opacity:.65;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:620px){.spaces-exercise-guide{padding:14px 13px}.spaces-motion{padding:9px 5px 7px}.spaces-guide-summary{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.spaces-exercise-guide{animation:none}}
