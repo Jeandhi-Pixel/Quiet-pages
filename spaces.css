@@ -1,0 +1,28 @@
+
+/* Quiet Spaces integration: the existing Quiet Pages visual language is preserved. */
+.spaces-panel{border:1px solid var(--line);background:var(--paper);border-radius:17px;padding:23px;margin:15px 0}
+.spaces-panel h3{font-family:Georgia,"Times New Roman",serif;font-size:23px;font-weight:400;margin:0 0 15px}
+.spaces-date-panel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.spaces-date-panel label{margin:0}.spaces-date-panel input{max-width:210px}
+.spaces-content{display:grid;gap:11px}.spaces-slot-title{margin:22px 0 9px;font:400 24px Georgia,serif}
+.spaces-task{padding:16px 17px;border:1px solid var(--line);border-radius:14px;background:var(--paper);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.spaces-task.is-done{background:#edf4e9;border-color:#c4d7c3}
+.spaces-task-main{display:grid;gap:4px;min-width:0}
+.spaces-task-main strong{font-size:14px;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.spaces-meta{font-size:11px;color:var(--muted);display:block}
+.spaces-task-actions{display:flex;gap:6px;flex-wrap:wrap}
+.spaces-mini-button{border:1px solid #ccd7c9;border-radius:10px;background:#fff;color:#54725b;font-size:12px;font-weight:700;padding:10px 12px}
+.spaces-mini-button[aria-pressed="true"]{background:#557761;color:#fff}
+.spaces-muted{font-size:13px;line-height:1.65;color:var(--muted)}
+.spaces-summary{background:#eaf1e6;border-radius:14px;padding:18px;display:flex;align-items:start;flex-direction:column;gap:3px}
+.spaces-summary strong{font-family:Georgia,serif;font-weight:400;font-size:21px}
+.spaces-workout-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.spaces-workout-header h3{margin:0}
+#spaces-product-form{display:grid;gap:10px}
+#spaces-product-form .field-label,#view-routines-settings .field-label{margin-top:10px;margin-bottom:0}
+.spaces-choice-row{display:flex;gap:13px;flex-wrap:wrap;font-size:13px;color:var(--ink);margin:12px 0}
+.spaces-choice-row label,.spaces-checkbox-line{display:inline-flex;align-items:center;gap:7px}
+.spaces-checkbox-line{font-size:13px;color:var(--ink);margin:12px 0}
+.spaces-form-actions{display:flex;gap:9px;flex-wrap:wrap}
+#view-routines-settings input[type="time"],#view-routines-settings select{max-width:330px;display:block;margin:10px 0 18px}
+@media(max-width:620px){.spaces-panel{padding:18px}.spaces-task{align-items:flex-start;flex-direction:column}.spaces-task-actions{width:100%}.spaces-mini-button{flex:1}.spaces-date-panel{align-items:stretch}.spaces-date-panel input{max-width:none}}
