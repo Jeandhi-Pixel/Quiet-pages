@@ -1,16 +1,26 @@
 {
-  "name":"Quiet Pages — Private Journal",
-  "short_name":"Quiet Pages",
-  "description":"Your private, offline-first journal. No account or cloud required.",
-  "id":"./",
-  "start_url":"./",
-  "scope":"./",
-  "display":"standalone",
-  "background_color":"#f7f5ef",
-  "theme_color":"#f7f5ef",
-  "orientation":"portrait-primary",
-  "icons":[
-    {"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  "name": "Quiet Spaces — Journal & Routines",
+  "short_name": "Quiet Spaces",
+  "description": "A private, offline-first space for your journal, workouts and self-care.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#f7f5ef",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
