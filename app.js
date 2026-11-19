@@ -18,6 +18,9 @@ let saveTimer = null;
 let saveQueue = Promise.resolve();
 let saveNumber = 0;
 let currentTab = 'write';
+let lastContentTab = 'write';
+let lastJournalTab = 'write';
+let lastSettingsTab = 'backup';
 let toastTimer = null;
 let unlocked = false;
 let checkingUpdate = false;
@@ -251,16 +254,55 @@ function changeDate(key) {
 }
 function showTab(tab) {
   if (!unlocked) return;
+  const settingsTab = tab === 'backup' || tab === 'routines-settings';
+  const area = settingsTab ? 'settings' :
+    ['write','history'].includes(tab) ? 'journal' :
+    tab === 'selfcare' ? 'skincare' :
+    tab === 'exercise' ? 'exercise' : null;
+  if (!area) return;
   if (currentTab === 'write' && tab !== 'write') flushEditor().catch(() => {});
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach(btn => {
-    const current = btn.dataset.tab === tab;
-    btn.classList.toggle('active',current);
-    if (current) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
+  if (settingsTab) lastSettingsTab = tab;
+  else {
+    lastContentTab = tab;
+    if (area === 'journal') lastJournalTab = tab;
+  }
+
+  $('app').dataset.area = area;
+  $('spaces-journal-nav').hidden = area !== 'journal';
+  $('spaces-settings-nav').hidden = area !== 'settings';
+  $('spaces-date-toolbar').hidden = !['skincare','exercise'].includes(area);
+  $('entry-count').hidden = area !== 'journal';
+  $('settings-btn').setAttribute('aria-pressed', String(settingsTab));
+  $('settings-btn').setAttribute('aria-label', settingsTab ? 'Return to your spaces' : 'Open settings');
+  $('settings-btn').title = settingsTab ? 'Return to your spaces' : 'Settings';
+
+  const copy = {
+    journal:['A moment for yourself','A private place for your thoughts.'],
+    skincare:['Care at your own pace','Your skincare, haircare, and daily routines.'],
+    exercise:['A little movement','Your weekly exercise plan, one session at a time.'],
+    settings:['Settings','Backups, privacy, reminders, and personal preferences.']
+  }[area];
+  const title = $('spaces-hero-title');
+  const dot = document.createElement('span'); dot.className = 'accent-dot'; dot.textContent = '.';
+  title.replaceChildren(document.createTextNode(copy[0]),dot);
+  $('spaces-hero-subtitle').textContent = copy[1];
+
+  document.querySelectorAll('.spaces-category').forEach(button => {
+    const active = button.dataset.category === area;
+    button.classList.toggle('is-current',active);
+    button.setAttribute('aria-pressed',String(active));
   });
-  for (const name of ['write','history','backup','today','exercise','selfcare','routines-settings']) $('view-'+name).hidden = name !== tab;
-  if (['today','exercise','selfcare'].includes(tab)) QuietSpaces.render(tab);
+  document.querySelectorAll('.tab').forEach(btn => {
+    const active = btn.dataset.tab === tab;
+    btn.classList.toggle('active',active);
+    if (active) btn.setAttribute('aria-current','page');
+    else btn.removeAttribute('aria-current');
+  });
+  for (const name of ['write','history','backup','exercise','selfcare','routines-settings'])
+    $('view-'+name).hidden = name !== tab;
   if (tab === 'history') renderHistory();
+  if (tab === 'selfcare' || tab === 'exercise') QuietSpaces.render(tab);
   if (tab === 'backup') {
     refreshSnapshots().catch(() => {});
     refreshFolderStatus().catch(() => {});
@@ -627,6 +669,13 @@ async function init() {
   $('next-day').addEventListener('click',()=>moveDate(1));
   $('date-picker').addEventListener('change',e=>changeDate(e.target.value));
   document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
+  document.querySelectorAll('.spaces-category').forEach(btn=>btn.addEventListener('click',()=>{
+    const area = btn.dataset.category;
+    showTab(area === 'journal' ? lastJournalTab : area === 'skincare' ? 'selfcare' : 'exercise');
+  }));
+  $('settings-btn').addEventListener('click',()=>{
+    showTab(currentTab === 'backup' || currentTab === 'routines-settings' ? lastContentTab : lastSettingsTab);
+  });
   $('search-input').addEventListener('input',renderHistory);
   QuietSpaces.bind({getState:() => vault?.routines,
     save:() => queueSave(),toast:showToast});
