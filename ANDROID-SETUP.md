@@ -45,6 +45,12 @@ npm run android:open
 
 Do not run `npx cap add android` again if the Android project already exists. `npm install` creates `package-lock.json`, which should be committed after you verify dependencies.
 
+## Alternative: build a debug APK in GitHub Actions
+
+This branch includes `.github/workflows/android-debug.yml`. On the pull request, GitHub Actions can compile a **debug-only** Android APK using Node 22 and JDK 21. If the run succeeds, open the GitHub **Actions** tab, select the **Android debug APK** run, and download the `quiet-spaces-debug-apk` artifact. Extract its ZIP to obtain `app-debug.apk`.
+
+This is only a temporary build for initial testing. GitHub-hosted runners may create a different debug signing key on different runs; trying to install the next debug APK over the previous one can fail, and uninstalling would erase the APK's private data. **Do not move your primary journal to repeated debug APK installations.** Use a stable release signing key for long-term daily use.
+
 ## 4. How this repository is organized
 
 - Root web assets remain the published PWA source.
