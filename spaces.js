@@ -74,6 +74,7 @@ const QuietSpaces = (() => {
     };
   }
   let ctx=null,selected=today(),editing=null;
+  let expandedExerciseHelp=null;
   const state=()=>ctx?.getState();
   const save=()=>ctx?.save().catch(()=>ctx.toast('Could not save routine changes.'));
   function due(p,date){
@@ -147,13 +148,33 @@ const QuietSpaces = (() => {
       return;
     }
     workout.moves.forEach((m,i)=>{
+      // Keep original exercise identifiers, sets, reps and encrypted log keys unchanged.
       const key=date+'|workout-'+workout.id+'-'+i+'|session';
+      const helpKey=workout.id+'-'+i;
       const done=state().log[key]==='done';
+      const wrapper=node('div','spaces-exercise-entry');
       const row=node('div','spaces-task'+(done?' is-done':''));
       const desc=node('div','spaces-task-main');
-      desc.append(node('strong','',m[0]),node('span','spaces-meta',m[1]));
-      if(!short)desc.append(node('small','spaces-muted',m[2]));
-      row.append(desc,btn(done?'✓ Done':'Mark done','workout',key,done));root.append(row);
+      const heading=node('div','spaces-exercise-title');
+      heading.append(node('strong','',m[0]));
+      const guide=ExerciseGuide.panel(m[0]);
+      if(guide){
+        const helpButton=btn('?','exercise-help',helpKey,expandedExerciseHelp===helpKey);
+        helpButton.className='spaces-help-trigger';
+        helpButton.title='How to do '+m[0];
+        helpButton.setAttribute('aria-label','How to do '+m[0]);
+        helpButton.setAttribute('aria-expanded',String(expandedExerciseHelp===helpKey));
+        helpButton.setAttribute('aria-controls','spaces-help-'+helpKey);
+        heading.append(helpButton);
+        guide.id='spaces-help-'+helpKey;
+        guide.hidden=expandedExerciseHelp!==helpKey;
+      }
+      desc.append(heading,node('span','spaces-meta',m[1]));
+      if(!short && !guide)desc.append(node('small','spaces-muted',m[2]));
+      row.append(desc,btn(done?'✓ Done':'Mark done','workout',key,done));
+      wrapper.append(row);
+      if(guide)wrapper.append(guide);
+      root.append(wrapper);
     });
   }
   function renderSelfCare(){
@@ -269,6 +290,15 @@ const QuietSpaces = (() => {
       section.addEventListener('click',e=>{
         const b=e.target.closest('button[data-space-action]');if(!b)return;
         const action=b.dataset.spaceAction,code=b.dataset.code;
+        if(action==='exercise-help'){
+          expandedExerciseHelp=expandedExerciseHelp===code ? null : code;
+          renderExercise();
+          // Rendering replaces row nodes: restore keyboard focus to the same ? button.
+          const refreshed=[...$('spaces-exercise-content').querySelectorAll('button[data-space-action="exercise-help"]')]
+            .find(button=>button.dataset.code===code);
+          refreshed?.focus();
+          return;
+        }
         if(action==='status-done'||action==='status-skipped'||action==='workout'){
           const desired=action==='workout'?'done':action==='status-done'?'done':'skipped';
           if(state().log[code]===desired)delete state().log[code];else state().log[code]=desired;
