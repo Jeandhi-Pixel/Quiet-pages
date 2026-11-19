@@ -95,7 +95,7 @@ function validateVault(v) {
         (e.mood !== null && e.mood !== undefined && !Object.hasOwn(moods, e.mood))) throw new Error('Invalid journal entry in backup.');
     clean[date] = {title:e.title.slice(0,160), body:e.body, mood:e.mood ?? null};
   }
-  return {version:1,entries:clean};
+  return {version:1,entries:clean,routines:QuietSpaces.normalize(v.routines)};
 }
 function rawEnvelope() {
   const raw = localStorage.getItem(VAULT_KEY);
@@ -145,7 +145,7 @@ async function gateSubmit(event) {
       if (password !== $('gate-confirm').value) throw new Error('The two passwords do not match.');
       const salt = randomBytes(16);
       const key = await deriveKey(password, salt, ITERATIONS);
-      const empty = {version:1,entries:Object.create(null)};
+      const empty = {version:1,entries:Object.create(null),routines:QuietSpaces.initial()};
       const envelope = await encryptPayload(empty, key, salt);
       await QuietDB.saveVault(envelope, {forceSnapshot:true});
       currentEncryptedEnvelope = envelope;
@@ -155,7 +155,7 @@ async function gateSubmit(event) {
     selectedDate = localDateKey(new Date());
     $('gate-password').value = ''; $('gate-confirm').value = '';
     $('gate').hidden = true; $('app').hidden = false;
-    showTab('write'); loadEditor(); updateCount(); updateTodayLabel();
+    showTab('write'); loadEditor(); updateCount(); updateTodayLabel(); QuietSpaces.unlocked();
     requestPersistentStorage();
     await initializeBackupUI();
     if (migratedFromLegacy) {
@@ -258,7 +258,8 @@ function showTab(tab) {
     btn.classList.toggle('active',current);
     if (current) btn.setAttribute('aria-current','page'); else btn.removeAttribute('aria-current');
   });
-  for (const name of ['write','history','backup']) $('view-'+name).hidden = name !== tab;
+  for (const name of ['write','history','backup','today','exercise','selfcare','routines-settings']) $('view-'+name).hidden = name !== tab;
+  if (['today','exercise','selfcare'].includes(tab)) QuietSpaces.render(tab);
   if (tab === 'history') renderHistory();
   if (tab === 'backup') {
     refreshSnapshots().catch(() => {});
@@ -338,7 +339,7 @@ async function restoreBackup() {
     masterKey=key;saltBytes=unb64(pendingBackup.salt);vault=restored;
     selectedDate=localDateKey(new Date());
     pendingBackup=null;$('import-panel').hidden=true;
-    showTab('write');loadEditor();updateCount();
+    showTab('write');loadEditor();updateCount(); QuietSpaces.unlocked();
     await refreshSnapshots();
     scheduleFolderBackup();
     showToast('Backup restored successfully.');
@@ -495,7 +496,7 @@ async function restoreLocalSnapshot() {
     currentEncryptedEnvelope = record.envelope;
     vault = restored;
     selectedDate = localDateKey(new Date());
-    showTab('write'); loadEditor(); updateCount();
+    showTab('write'); loadEditor(); updateCount(); QuietSpaces.unlocked();
     await refreshSnapshots();
     scheduleFolderBackup();
     showToast('Local restore point recovered.');
@@ -627,6 +628,8 @@ async function init() {
   $('date-picker').addEventListener('change',e=>changeDate(e.target.value));
   document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
   $('search-input').addEventListener('input',renderHistory);
+  QuietSpaces.bind({getState:() => vault?.routines,
+    save:() => queueSave(),toast:showToast});
   $('lock-btn').addEventListener('click',lockJournal);
   $('delete-entry').addEventListener('click',async () => {
     if (!confirm('Delete this entry? You can recover a previous restore point if one exists.')) return;
