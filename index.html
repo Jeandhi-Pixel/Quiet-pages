@@ -68,6 +68,9 @@
       </div>
       <div class="topbar-right">
         <span class="entry-stat" id="entry-count">0 entries</span>
+        <button id="settings-btn" class="icon-btn settings-gear" type="button" title="Settings" aria-label="Open settings" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 2h4l.6 2.5a8 8 0 0 1 1.7 1l2.4-.9 2 3.5-1.9 1.7a8 8 0 0 1 0 2l1.9 1.7-2 3.5-2.4-.9a8 8 0 0 1-1.7 1L14 20h-4l-.6-2.5a8 8 0 0 1-1.7-1l-2.4.9-2-3.5 1.9-1.7a8 8 0 0 1 0-2L3.3 8.5l2-3.5 2.4.9a8 8 0 0 1 1.7-1L10 2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="11" r="3" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
         <button id="lock-btn" class="icon-btn" type="button" title="Lock journal" aria-label="Lock journal">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 1 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         </button>
@@ -76,18 +79,39 @@
     <main>
       <section class="hero">
         <p class="eyebrow" id="today-label">MONDAY, NOVEMBER 16</p>
-        <h1>A moment for yourself<span class="accent-dot">.</span></h1>
-        <p>Some thoughts are worth keeping, even the little ones.</p>
+        <h1 id="spaces-hero-title">A moment for yourself<span class="accent-dot">.</span></h1>
+        <p id="spaces-hero-subtitle">Write, care, and move at your own pace.</p>
       </section>
-      <nav class="tabbar" aria-label="Journal sections">
+      <nav id="spaces-category-nav" class="spaces-category-nav" aria-label="Main sections">
+        <button type="button" class="spaces-category spaces-category-journal is-current" data-category="journal" aria-pressed="true">
+          <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 6c-2-2-5-2.5-9-1.5V19c4-1 7-.5 9 1.5m0-14.5c2-2 5-2.5 9-1.5V19c-4-1-7-.5-9 1.5M12 6v14.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="spaces-category-title">Journaling</span>
+          <span class="spaces-category-desc">Write &amp; reflect</span>
+        </button>
+        <button type="button" class="spaces-category spaces-category-skincare" data-category="skincare" aria-pressed="false">
+          <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2c-3.5 5.2-7.5 9-7.5 13a7.5 7.5 0 0 0 15 0C19.5 11 15.5 7.2 12 2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 15a4 4 0 0 0 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+          <span class="spaces-category-title">Skincare</span>
+          <span class="spaces-category-desc">Skin &amp; hair</span>
+        </button>
+        <button type="button" class="spaces-category spaces-category-exercise" data-category="exercise" aria-pressed="false">
+          <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 9v6m3-9v12m3-7h6m0 2H9m6-2h3m0-5v12m3-9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <span class="spaces-category-title">Exercise</span>
+          <span class="spaces-category-desc">Weekly Curves</span>
+        </button>
+      </nav>
+      <nav id="spaces-journal-nav" class="tabbar spaces-subnav" aria-label="Journal pages">
         <button class="tab active" type="button" data-tab="write" aria-current="page">Write</button>
         <button class="tab" type="button" data-tab="history">Past entries</button>
-        <button class="tab" type="button" data-tab="backup">Backup & privacy</button>
-        <button class="tab" type="button" data-tab="today">Today</button>
-        <button class="tab" type="button" data-tab="exercise">Exercise</button>
-        <button class="tab" type="button" data-tab="selfcare">Self-care</button>
-        <button class="tab" type="button" data-tab="routines-settings">Routines settings</button>
       </nav>
+      <nav id="spaces-settings-nav" class="tabbar spaces-subnav" aria-label="Settings pages" hidden>
+        <button class="tab" type="button" data-tab="backup">Backup &amp; privacy</button>
+        <button class="tab" type="button" data-tab="routines-settings">Reminders &amp; exercise</button>
+      </nav>
+      <div id="spaces-date-toolbar" class="spaces-panel spaces-date-panel" hidden>
+        <label class="field-label" for="spaces-date">Routine date</label>
+        <input id="spaces-date" class="text-input" type="date">
+        <button id="spaces-today-button" class="btn btn-outline" type="button">Today</button>
+      </div>
 
       <section id="view-write" class="view" aria-label="Write journal entry">
         <div class="journal-card">
@@ -157,15 +181,6 @@
         <div class="privacy-note"><h3>Good to know</h3><p>Entries are encrypted using AES-GCM and stored in a dedicated browser IndexedDB database. Nothing is uploaded to GitHub or our servers. Automatic folder backups are encrypted files written only to your chosen folder while access is allowed. Local restore points are erased along with browser site data; external files may remain. Back up outside your phone for loss protection. Your password cannot be reset.</p></div>
       </section>
 
-      <section id="view-today" class="view" aria-label="Today's routines" hidden>
-        <div class="section-head"><div><p class="card-kicker">YOUR DAILY RHYTHM</p><h2>One gentle step at a time.</h2></div></div>
-        <div class="spaces-panel spaces-date-panel">
-          <label class="field-label" for="spaces-date">Routine date</label>
-          <input id="spaces-date" class="text-input" type="date">
-          <button id="spaces-today-button" class="btn btn-outline" type="button">Today</button>
-        </div>
-        <div id="spaces-today-content" class="spaces-content"></div>
-      </section>
       <section id="view-exercise" class="view" aria-label="Exercise plan" hidden>
         <div class="section-head"><div><p class="card-kicker">WEEKLY CURVES</p><h2>Movement at your pace.</h2></div></div>
         <p class="spaces-muted">Two strength days and two yoga sessions per week. Check off exercises individually; your history is encrypted.</p>
