@@ -156,22 +156,14 @@ const QuietSpaces = (() => {
       row.append(desc,btn(done?'✓ Done':'Mark done','workout',key,done));root.append(row);
     });
   }
-  function renderToday(){
-    const root=$('spaces-today-content');
-    root.replaceChildren();
-    const list=['am','pm'].flatMap(slot=>productTasks(selected,slot));
-    const count=list.filter(x=>state().log[x.key]==='done').length;
-    const header=node('div','spaces-summary');
-    header.append(node('strong','',count+' of '+list.length+' applications completed'),
-      node('span','spaces-meta','A gentle overview, not a streak.'));
-    root.append(header);
-    periodRows(root,selected,'am');periodRows(root,selected,'pm');
-    const title=node('h3','spaces-slot-title','Movement');
-    const workout=node('div','spaces-panel');exerciseRows(workout,selected,true);
-    root.append(title,workout);
-  }
   function renderSelfCare(){
     const root=$('spaces-selfcare-content');root.replaceChildren();
+    const scheduled=['am','pm'].flatMap(slot=>productTasks(selected,slot));
+    const completed=scheduled.filter(item=>state().log[item.key]==='done').length;
+    const summary=node('div','spaces-summary');
+    summary.append(node('strong','',completed+' of '+scheduled.length+' applications completed'),
+      node('span','spaces-meta','Skin and haircare. One day at a time, no streak pressure.'));
+    root.append(summary);
     periodRows(root,selected,'am');periodRows(root,selected,'pm');
     const products=$('spaces-product-list');products.replaceChildren();
     for(const p of state().products){
@@ -193,11 +185,10 @@ const QuietSpaces = (() => {
   function render(tab){
     if(!ctx||!state())return;
     $('spaces-date').value=selected;
-    if(tab==='today')renderToday();
-    else if(tab==='exercise')renderExercise();
+    if(tab==='exercise')renderExercise();
     else if(tab==='selfcare')renderSelfCare();
   }
-  function renderAll(){renderToday();renderExercise();renderSelfCare();}
+  function renderAll(){renderExercise();renderSelfCare();}
   function saveAndRefresh(){save();renderAll();}
   function showEditor(p){
     editing=p?.id||null;
