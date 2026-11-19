@@ -619,7 +619,7 @@ function setupAppUpdates() {
   // Capacitor bundles a native release; never register the PWA's cache-first
   // service worker inside Android WebView (it can interfere with plugin loading).
   // Native updates must be delivered through a new signed APK.
-  if (globalThis.Capacitor?.isNativePlatform?.()) return;
+  if (globalThis.QuietSpacesNative === true || globalThis.Capacitor?.isNativePlatform?.()) return;
   $('update-now').addEventListener('click',installAppUpdate);
   $('update-later').addEventListener('click',()=>setUpdateBanner(false));
   if (!('serviceWorker' in navigator)) return;
