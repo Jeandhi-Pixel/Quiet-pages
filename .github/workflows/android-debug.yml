@@ -36,11 +36,14 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Generate Android project and stage app
         run: npm run android:init
+      - name: Check Maven dependency access
+        run: |
+          curl --fail --location --silent --show-error --retry 2 --retry-delay 2 --output /dev/null https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
       - name: Build Android debug APK
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --refresh-dependencies
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
