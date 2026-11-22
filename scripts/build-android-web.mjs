@@ -36,7 +36,7 @@ if (!index.includes(dbTag) || !index.includes('./app.js')) {
   throw new Error('Cannot package Quiet Spaces: required app script tags not found.');
 }
 await writeFile(join(destination, 'native-env.js'),
-  "'use strict'; globalThis.QuietSpacesNative = true;\n", 'utf8');
+  "'use strict'; globalThis.QuietSpacesNative = true; document.documentElement.classList.add('quiet-native');\n", 'utf8');
 await writeFile(join(destination, 'index.html'),
   index.replace(dbTag, '<script defer src="./native-env.js"></script>\n  ' + dbTag), 'utf8');
 
