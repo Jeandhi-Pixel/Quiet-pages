@@ -55,7 +55,7 @@ async function main(){
  const notes=(process.env.RELEASE_NOTES||'Quiet Spaces improvements.').slice(0,240);
  const manifest={
    version,nativeRevision:1,
-   url:'https://jeandhi-pixel.github.io/Quiet-pages/ota/releases/'+filename,
+   url:'https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/releases/'+filename,
    checksum:digest,notes
  };
  await writeFile(manifestPath,JSON.stringify(manifest,null,2)+'\n','utf8');
