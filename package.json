@@ -12,7 +12,8 @@
     "android:init": "npm run build:android-web && npx cap add android",
     "android:sync": "npm run build:android-web && npx cap sync android",
     "android:open": "npx cap open android",
-    "test:notifications": "node --test tests/notifications.test.mjs"
+    "test:notifications": "node --test tests/notifications.test.mjs",
+    "test:progress": "node --test tests/progress.test.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
