@@ -40,6 +40,6 @@ if (!index.includes(dbTag) || !index.includes('./app.js')) {
 await writeFile(join(destination, 'native-env.js'),
   "'use strict'; globalThis.QuietSpacesNative = true; globalThis.QuietSpacesNativeRevision = 1; document.documentElement.classList.add('quiet-native');\n", 'utf8');
 await writeFile(join(destination, 'index.html'),
-  index.replace(dbTag, '<script defer src="./native-env.js"></script>\n  ' + dbTag).replace("connect-src 'self'", "connect-src 'self' https://jeandhi-pixel.github.io"), 'utf8');
+  index.replace(dbTag, '<script defer src="./native-env.js"></script>\n  ' + dbTag).replace("connect-src 'self'", "connect-src 'self' https://raw.githubusercontent.com"), 'utf8');
 
 console.log('Prepared Quiet Spaces Android web bundle in www/ (' + assets.length + ' files + icons).');
