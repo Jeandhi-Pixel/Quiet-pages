@@ -81,7 +81,7 @@ jobs:
           npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle "$RELEASE_VERSION" --name "quiet-spaces-v$RELEASE_VERSION.zip" --json
       - name: Stage update bundle and manifest
         run: |
-          mapfile -d '' files < <(find . -maxdepth 3 -type f \\( -name "quiet-spaces-v$RELEASE_VERSION.zip" -o -name "quiet-spaces-v$RELEASE_VERSION" \\) -not -path './node_modules/*' -not -path './ota/releases/*' -print0)
+          mapfile -d '' files < <(find . -maxdepth 3 -type f \( -name "quiet-spaces-v$RELEASE_VERSION.zip" -o -name "quiet-spaces-v$RELEASE_VERSION" \) -not -path './node_modules/*' -not -path './ota/releases/*' -print0)
           if [ "${#files[@]}" -ne 1 ]; then
             printf 'Expected exactly one generated ZIP; found %s\n' "${#files[@]}" >&2
             exit 1
