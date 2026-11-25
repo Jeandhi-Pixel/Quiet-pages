@@ -1,7 +1,7 @@
 {
-  "version": "0.2.1",
+  "version": "0.2.2",
   "nativeRevision": 1,
-  "url": "https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/releases/quiet-spaces-v0.2.1.zip",
-  "checksum": "31a6840ed164eb339fe1bb0899fd01bf0a499619ed42f5af5564c7663969009b",
-  "notes": "First OTA test release v0.2.1: check archive delivery and in-app version confirmation."
+  "url": "https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/releases/quiet-spaces-v0.2.2.zip",
+  "checksum": "febda5b52ed4961c6428e45b7a674de46fbf84375f333a018e89562a2c2896a5",
+  "notes": "Native Android care and workout reminders with editable exercise time and test notification."
 }
