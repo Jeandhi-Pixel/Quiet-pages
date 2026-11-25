@@ -18,6 +18,7 @@
   <script defer src="./db.js"></script>
   <script defer src="./exercise-guide.js"></script>
   <script defer src="./spaces.js"></script>
+  <script defer src="./progress.js"></script>
   <script defer src="./app.js"></script>
 </head>
 <body>
@@ -101,6 +102,16 @@
           <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 9v6m3-9v12m3-7h6m0 2H9m6-2h3m0-5v12m3-9v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
           <span class="spaces-category-title">Exercice</span>
           <span class="spaces-category-desc">Weekly Curves</span>
+        </button>
+        <button type="button" class="spaces-category spaces-category-meditation" data-category="meditation" aria-pressed="false">
+          <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21c-4-2.5-6.2-5.1-6.2-8.3C5.8 9.3 8 6 12 3c4 3 6.2 6.3 6.2 9.7C18.2 15.9 16 18.5 12 21Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 21c-3.9-.1-7.8-1.8-9-5.8 3.1-1.1 5.1-.8 7.2.2M12 21c3.9-.1 7.8-1.8 9-5.8-3.1-1.1-5.1-.8-7.2.2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+          <span class="spaces-category-title">Meditation</span>
+          <span class="spaces-category-desc">Pause &amp; reflect</span>
+        </button>
+        <button type="button" class="spaces-category spaces-category-progress" data-category="progress" aria-pressed="false">
+          <span class="spaces-category-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M7.5 3v4M16.5 3v4M3.5 10h17M8 14h2m4 0h2m-8 4h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+          <span class="spaces-category-title">Progress</span>
+          <span class="spaces-category-desc">Your calendar</span>
         </button>
       </nav>
       <nav id="spaces-journal-nav" class="tabbar spaces-subnav" aria-label="Journal pages">
@@ -244,6 +255,75 @@
               <button type="button" id="spaces-product-cancel" class="btn btn-outline">Cancel</button>
             </div>
           </form>
+        </div>
+      </section>
+      <section id="view-meditation" class="view" aria-label="Meditation log" hidden>
+        <div class="section-head"><div><p class="card-kicker">A MOMENT OF STILLNESS</p><h2>Your meditation time.</h2></div></div>
+        <p class="spaces-muted">Record the time you spent meditating. No timers or streaks required — just a quiet record of your practice.</p>
+        <div class="spaces-panel spaces-meditation-panel">
+          <form id="spaces-meditation-form">
+            <label class="field-label" for="spaces-meditation-date">Meditation date</label>
+            <div class="spaces-meditation-date-row">
+              <input class="text-input" type="date" id="spaces-meditation-date" required>
+              <button id="spaces-meditation-today" class="btn btn-outline" type="button">Today</button>
+            </div>
+            <label class="field-label" for="spaces-meditation-minutes">Duration (minutes)</label>
+            <input class="text-input" type="number" id="spaces-meditation-minutes" min="1" max="600" step="1" inputmode="numeric" placeholder="e.g. 15" required>
+            <div class="spaces-meditation-presets" aria-label="Quick duration choices">
+              <button type="button" class="spaces-duration-preset" data-meditation-minutes="5">5 min</button>
+              <button type="button" class="spaces-duration-preset" data-meditation-minutes="10">10 min</button>
+              <button type="button" class="spaces-duration-preset" data-meditation-minutes="15">15 min</button>
+              <button type="button" class="spaces-duration-preset" data-meditation-minutes="20">20 min</button>
+              <button type="button" class="spaces-duration-preset" data-meditation-minutes="30">30 min</button>
+            </div>
+            <p class="spaces-muted" id="spaces-meditation-caption" role="status" aria-live="polite">No meditation logged for today.</p>
+            <div class="spaces-meditation-actions">
+              <button id="spaces-meditation-save" class="btn btn-primary" type="submit">Save meditation</button>
+              <button id="spaces-meditation-clear" class="btn btn-outline" type="button" disabled>Remove entry</button>
+            </div>
+          </form>
+        </div>
+        <div class="spaces-panel">
+          <h3>Recent meditations</h3>
+          <div id="spaces-meditation-recent" class="spaces-meditation-history"></div>
+        </div>
+      </section>
+      <section id="view-progress" class="view" aria-label="Monthly activity calendar" hidden>
+        <div class="section-head"><div><p class="card-kicker">YOUR JOURNEY</p><h2>Little moments add up.</h2></div></div>
+        <p class="spaces-muted">See which days you recorded a journal entry, completed an exercise or skincare application, or meditated. Colored dots mark activity, not a score or obligation.</p>
+        <div class="spaces-panel spaces-progress-panel">
+          <div class="spaces-calendar-header">
+            <button id="spaces-calendar-prev" class="spaces-calendar-nav" type="button" aria-label="Previous month">‹</button>
+            <h3 id="spaces-calendar-month" aria-live="polite">This month</h3>
+            <button id="spaces-calendar-next" class="spaces-calendar-nav" type="button" aria-label="Next month">›</button>
+          </div>
+          <div id="spaces-calendar-grid" class="spaces-calendar-grid" aria-label="Activity calendar"></div>
+          <div class="spaces-calendar-legend" aria-label="Activity types">
+            <span><i class="spaces-calendar-dot is-journal" aria-hidden="true"></i> Journal</span>
+            <span><i class="spaces-calendar-dot is-exercise" aria-hidden="true"></i> Exercise</span>
+            <span><i class="spaces-calendar-dot is-skincare" aria-hidden="true"></i> Skincare</span>
+            <span><i class="spaces-calendar-dot is-meditation" aria-hidden="true"></i> Meditation</span>
+          </div>
+          <div class="spaces-progress-footer">
+            <p class="spaces-muted">Tap any date to see what you logged.</p>
+            <button id="spaces-calendar-today" class="btn btn-outline" type="button">Jump to today</button>
+          </div>
+        </div>
+        <div class="spaces-panel">
+          <h3>This month's activity</h3>
+          <div class="spaces-progress-stats">
+            <div><strong id="spaces-progress-active-days">0</strong><span>Active days</span></div>
+            <div><strong id="spaces-progress-journal-days">0</strong><span>Journal days</span></div>
+            <div><strong id="spaces-progress-exercise-days">0</strong><span>Exercise days</span></div>
+            <div><strong id="spaces-progress-care-days">0</strong><span>Skincare days</span></div>
+            <div><strong id="spaces-progress-meditation-days">0</strong><span>Meditation days</span></div>
+            <div><strong id="spaces-progress-minutes">0 min</strong><span>Meditated</span></div>
+          </div>
+        </div>
+        <div class="spaces-panel">
+          <h3 id="spaces-progress-selected">Selected day</h3>
+          <div id="spaces-progress-details" class="spaces-progress-details"></div>
+          <button id="spaces-progress-meditate" class="btn btn-outline" type="button">Log meditation for this day</button>
         </div>
       </section>
       <section id="view-routines-settings" class="view" aria-label="Routine settings" hidden>
