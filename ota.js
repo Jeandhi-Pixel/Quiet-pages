@@ -7,7 +7,7 @@
  * PWA continues using its independent service worker updater.
  */
 const QuietOTA = (() => {
-  const ROOT = 'https://jeandhi-pixel.github.io/Quiet-pages/ota/';
+  const ROOT = 'https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/';
   const MANIFEST = ROOT + 'latest.json';
   const NATIVE_REVISION = 1; // Match native-env.js / GitHub release workflow.
   const VERSION = globalThis.QuietSpacesVersion || '0.2.0';
@@ -39,8 +39,8 @@ const QuietOTA = (() => {
         !/^[a-fA-F0-9]{64}$/.test(value.checksum)) return null;
     try {
       const url = new URL(value.url);
-      if (url.origin !== 'https://jeandhi-pixel.github.io' ||
-          !url.pathname.startsWith('/Quiet-pages/ota/releases/') ||
+      if (url.origin !== 'https://raw.githubusercontent.com' ||
+          !url.pathname.startsWith('/Jeandhi-Pixel/Quiet-pages/main/ota/releases/') ||
           !url.pathname.endsWith('.zip') ||
           url.username || url.password || url.search || url.hash) return null;
     } catch (_) { return null; }
