@@ -44,13 +44,16 @@ npm.cmd run android:open
 
 **Only after this native-enabled APK has been tested and PR #4 merged into main:**
 
-1. Test and merge the HTML/CSS/JS changes to `main` (no native/plugin changes). Do not include private journal data.
-2. Open GitHub → **Actions → Publish Quiet Spaces OTA web update → Run workflow** on the `main` branch.
-3. Enter a new version such as `0.2.1` (greater than the previous published release and native baseline), and short notes.
-4. The workflow packages `www/` with the official Capgo CLI, computes SHA-256, commits the ZIP and `ota/latest.json` to main, then GitHub's raw-file endpoint serves them.
-5. On your phone, open Quiet Spaces while online. It will offer the new version. Tap **Update now**; it saves and locks the journal before applying the bundle.
+1. Test and merge HTML/CSS/JS changes to `main` (no native/plugin changes). Never commit private journal data.
+2. Publish by either of these explicit actions:
+   - **Reviewed release request (recommended):** create a new JSON file at `ota/requests/vX.Y.Z.json` containing `{"version":"X.Y.Z","notes":"Short description"}`; merge the release-request PR to `main`. That one newly added file triggers the publishing workflow.
+   - **Manual dispatch:** GitHub → **Actions → Publish Quiet Spaces OTA web update → Run workflow**, enter version and notes.
+3. The workflow validates the new version, stages `www/`, uses the official Capgo CLI to zip it, generates SHA-256, and publishes the ZIP and `ota/latest.json` to the repository. GitHub's raw-file endpoint serves both.
+4. Open Quiet Spaces on your phone while online and use **Check for updates**. Tap **Update now**; the app saves and locks the journal before applying the updated web bundle.
 
-Manual publishing requires a GitHub Actions workflow with **Contents: write** permission. If your repository limits workflow writes, grant the workflow permission in repository settings. Raw GitHub files can be cached by GitHub's CDN briefly. The update checker adds a cache-busting query to the manifest check.
+The first verification release is **v0.2.1**. It displays an "OTA test successful" message in **Settings → Reminders & exercise → About & updates** only after the new native web bundle has loaded.
+
+Publishing requires GitHub Actions **Contents: write** permission. If repository settings restrict workflow writes, grant the workflow permission. The raw GitHub endpoint may briefly cache the previous version; the app checks again when reopened. Release ZIPs and the version manifest must never contain passwords or journal data.
 
 ## Rollback and data safety
 
