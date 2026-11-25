@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./spaces.css">
   <title>Quiet Spaces — Your Private Space</title>
+  <script defer src="./app-version.js"></script>
+  <script defer src="./ota.js"></script>
   <script defer src="./db.js"></script>
   <script defer src="./exercise-guide.js"></script>
   <script defer src="./spaces.js"></script>
@@ -275,6 +277,13 @@
             <label><input type="checkbox" data-space-yoga="6"> Sat</label>
           </div>
           <button id="spaces-save-settings" class="btn btn-primary" type="button">Save preferences</button>
+        </div>
+        <div class="spaces-panel" id="spaces-app-about">
+          <h3>About &amp; updates</h3>
+          <p class="spaces-muted">Your personal data stays on your device. Updates change only the application files.</p>
+          <p class="spaces-app-version-line">Quiet Spaces <strong>v<span id="spaces-app-version">0.2.0</span></strong></p>
+          <p class="spaces-muted" id="spaces-ota-status" role="status" aria-live="polite">Checking update support…</p>
+          <button type="button" id="spaces-ota-check" class="btn btn-outline">Check for updates</button>
         </div>
       </section>
     </main>
