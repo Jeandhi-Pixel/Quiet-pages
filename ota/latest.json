@@ -1,0 +1,7 @@
+{
+  "version": "0.2.0",
+  "nativeRevision": 1,
+  "url": null,
+  "checksum": null,
+  "notes": "Initial OTA-ready Android foundation. No remote update published."
+}
