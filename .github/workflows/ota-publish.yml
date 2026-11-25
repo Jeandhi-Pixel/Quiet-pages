@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            mapfile -t requests < <(git diff --name-only --diff-filter=A HEAD^ HEAD -- 'ota/requests/*.json')
+            mapfile -t requests < <(git diff --name-only HEAD^ HEAD -- 'ota/requests/*.json')
             if [[ "${#requests[@]}" -ne 1 ]]; then
               echo 'Expected exactly one newly added OTA request.' >&2
               exit 1
@@ -78,10 +78,10 @@ jobs:
           node scripts/release-ota.mjs prepare "$RELEASE_VERSION"
       - name: Create bundle with official Capgo CLI
         run: |
-          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle "$RELEASE_VERSION" --name "quiet-spaces-v$RELEASE_VERSION" --json
+          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle "$RELEASE_VERSION" --name "quiet-spaces-v$RELEASE_VERSION.zip" --json
       - name: Stage update bundle and manifest
         run: |
-          mapfile -d '' files < <(find . -type f -name '*.zip' -not -path './node_modules/*' -not -path './ota/releases/*' -print0)
+          mapfile -d '' files < <(find . -maxdepth 3 -type f \\( -name "quiet-spaces-v$RELEASE_VERSION.zip" -o -name "quiet-spaces-v$RELEASE_VERSION" \\) -not -path './node_modules/*' -not -path './ota/releases/*' -print0)
           if [ "${#files[@]}" -ne 1 ]; then
             printf 'Expected exactly one generated ZIP; found %s\n' "${#files[@]}" >&2
             exit 1
