@@ -54,6 +54,8 @@ const QuietOTA = (() => {
   function currentLabel() {
     const label = $('spaces-app-version');
     if (label) label.textContent = VERSION;
+    const proof = $('spaces-ota-test-result');
+    if (proof) proof.hidden = !(native() && VERSION === '0.2.1');
   }
   function status(message) {
     const target = $('spaces-ota-status');
