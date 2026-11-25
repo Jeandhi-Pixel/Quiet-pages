@@ -1,6 +1,10 @@
 name: Publish Quiet Spaces OTA web update
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'ota/requests/*.json'
   workflow_dispatch:
     inputs:
       version:
@@ -26,15 +30,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      RELEASE_VERSION: ${{ inputs.version }}
-      RELEASE_NOTES: ${{ inputs.notes }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
+          fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Resolve and validate explicit release request
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_NOTES: ${{ inputs.notes }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            mapfile -t requests < <(git diff --name-only --diff-filter=A HEAD^ HEAD -- 'ota/requests/*.json')
+            if [[ "${#requests[@]}" -ne 1 ]]; then
+              echo 'Expected exactly one newly added OTA request.' >&2
+              exit 1
+            fi
+            export OTA_REQUEST_FILE="${requests[0]}"
+          fi
+          node - <<'NODE'
+          const fs=require('node:fs');
+          let version=process.env.INPUT_VERSION||'';
+          let notes=process.env.INPUT_NOTES||'OTA verification update.';
+          if(process.env.GITHUB_EVENT_NAME==='push'){
+            const path=process.env.OTA_REQUEST_FILE||'';
+            if(!/^ota\/requests\/v\d+\.\d+\.\d+\.json$/.test(path))throw Error('Invalid OTA request filename');
+            const request=JSON.parse(fs.readFileSync(path,'utf8'));
+            version=request.version;
+            notes=request.notes;
+            if(path!=='ota/requests/v'+version+'.json')throw Error('Request filename/version mismatch');
+          }
+          if(typeof version!=='string'||!/^\d{1,5}\.\d{1,5}\.\d{1,5}$/.test(version))
+            throw Error('Invalid release version');
+          if(typeof notes!=='string'||notes.length>240||/[\r\n]/.test(notes))
+            throw Error('Invalid release notes');
+          fs.appendFileSync(process.env.GITHUB_ENV,'RELEASE_VERSION='+version+'\nRELEASE_NOTES='+notes+'\n');
+          console.log('Validated explicit OTA release request v'+version);
+          NODE
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Prepare native-style web bundle
@@ -53,7 +89,7 @@ jobs:
           fi
           node scripts/release-ota.mjs finalize "$RELEASE_VERSION" "${files[0]}"
           test -s "ota/releases/quiet-spaces-v$RELEASE_VERSION.zip"
-      - name: Publish checked OTA manifest and bundle on GitHub Pages
+      - name: Publish checked OTA manifest and bundle to GitHub repository
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -62,6 +98,6 @@ jobs:
           git commit -m "Publish Quiet Spaces OTA v$RELEASE_VERSION"
           git push origin HEAD:main
 
-# Manual publishing only. OTA files are public web assets and must not contain
+# OTA publication requires an explicit workflow dispatch or a merged JSON request.\n# OTA files are public web assets and must not contain
 # user journals, passwords, secrets, signing keys, or any private app data.
 # Native plugin/configuration changes always require a separately signed APK.
