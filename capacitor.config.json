@@ -8,6 +8,12 @@
       "initialViewportFitValueHint": "cover",
       "style": "LIGHT",
       "hidden": false
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": "off",
+      "statsUrl": "",
+      "appReadyTimeout": 30000,
+      "autoDeletePrevious": false
     }
   }
 }
