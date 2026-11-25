@@ -14,6 +14,7 @@
   <title>Quiet Spaces — Your Private Space</title>
   <script defer src="./app-version.js"></script>
   <script defer src="./ota.js"></script>
+  <script defer src="./notifications.js"></script>
   <script defer src="./db.js"></script>
   <script defer src="./exercise-guide.js"></script>
   <script defer src="./spaces.js"></script>
@@ -249,15 +250,26 @@
         <div class="section-head"><div><p class="card-kicker">PERSONALIZE</p><h2>Your routines, your rhythm.</h2></div></div>
         <div class="spaces-panel">
           <h3>Reminder preferences</h3>
-          <p class="spaces-muted">Saved for Capacitor later. Browser notifications are not activated in this version.</p>
+          <p class="spaces-muted">Schedule reminders locally on your Android phone. Times may be slightly delayed by battery-saving features.</p>
           <label class="field-label" for="spaces-am-time">Morning reminder</label>
           <input class="text-input" type="time" id="spaces-am-time">
           <label class="field-label" for="spaces-pm-time">Before-bed reminder</label>
           <input class="text-input" type="time" id="spaces-pm-time">
           <label class="spaces-checkbox-line"><input id="spaces-discreet" type="checkbox"> Use discreet wording on lock-screen notifications</label>
+          <div class="spaces-native-notification-settings">
+            <p class="spaces-muted">Reminders are off until you explicitly enable them. Quiet Spaces schedules the next 14 days when unlocked; reopen it regularly to extend your reminders.</p>
+            <div class="spaces-reminder-actions">
+              <button type="button" id="spaces-notifications-toggle" class="btn btn-primary" disabled>Enable reminders</button>
+              <button type="button" id="spaces-notifications-test" class="btn btn-outline" disabled>Send test notification</button>
+            </div>
+            <p id="spaces-notifications-status" class="spaces-muted" role="status" aria-live="polite">Reminders are not active yet.</p>
+          </div>
         </div>
         <div class="spaces-panel">
           <h3>Weekly Curves plan</h3>
+          <label class="field-label" for="spaces-workout-time">Exercise reminder time</label>
+          <input class="text-input" type="time" id="spaces-workout-time" value="18:00">
+          <p class="spaces-muted">Used on your selected strength and yoga days. Change the time and save preferences to update your reminders.</p>
           <label class="field-label" for="spaces-strength-a">Strength A</label>
           <select id="spaces-strength-a" class="text-input">
             <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
