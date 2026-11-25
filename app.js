@@ -158,7 +158,7 @@ async function gateSubmit(event) {
     selectedDate = localDateKey(new Date());
     $('gate-password').value = ''; $('gate-confirm').value = '';
     $('gate').hidden = true; $('app').hidden = false;
-    showTab('write'); loadEditor(); updateCount(); updateTodayLabel(); QuietSpaces.unlocked(); QuietNotifications.onUnlocked();
+    showTab('write'); loadEditor(); updateCount(); updateTodayLabel(); QuietSpaces.unlocked(); QuietProgress.unlocked(); QuietNotifications.onUnlocked();
     requestPersistentStorage();
     await initializeBackupUI();
     if (migratedFromLegacy) {
@@ -258,7 +258,9 @@ function showTab(tab) {
   const area = settingsTab ? 'settings' :
     ['write','history'].includes(tab) ? 'journal' :
     tab === 'selfcare' ? 'skincare' :
-    tab === 'exercise' ? 'exercise' : null;
+    tab === 'exercise' ? 'exercise' :
+    tab === 'meditation' ? 'meditation' :
+    tab === 'progress' ? 'progress' : null;
   if (!area) return;
   if (currentTab === 'write' && tab !== 'write') flushEditor().catch(() => {});
   currentTab = tab;
@@ -281,6 +283,8 @@ function showTab(tab) {
     journal:['A moment for yourself','A private place for your thoughts.'],
     skincare:['Care at your own pace','Your skincare, haircare, and daily routines.'],
     exercise:['A little movement','Your weekly exercise plan, one session at a time.'],
+    meditation:['A quiet pause','Your meditation moments, at your own pace.'],
+    progress:['Your little milestones','See how your personal routines come together.'],
     settings:['Settings','Backups, privacy, reminders, and personal preferences.']
   }[area];
   const title = $('spaces-hero-title');
@@ -299,10 +303,11 @@ function showTab(tab) {
     if (active) btn.setAttribute('aria-current','page');
     else btn.removeAttribute('aria-current');
   });
-  for (const name of ['write','history','backup','exercise','selfcare','routines-settings'])
+  for (const name of ['write','history','backup','exercise','selfcare','meditation','progress','routines-settings'])
     $('view-'+name).hidden = name !== tab;
   if (tab === 'history') renderHistory();
   if (tab === 'selfcare' || tab === 'exercise') QuietSpaces.render(tab);
+  if (tab === 'meditation' || tab === 'progress') QuietProgress.render(tab);
   if (tab === 'backup') {
     refreshSnapshots().catch(() => {});
     refreshFolderStatus().catch(() => {});
@@ -382,7 +387,7 @@ async function restoreBackup() {
     masterKey=key;saltBytes=unb64(pendingBackup.salt);vault=restored;
     selectedDate=localDateKey(new Date());
     pendingBackup=null;$('import-panel').hidden=true;
-    showTab('write');loadEditor();updateCount(); QuietSpaces.unlocked(); QuietNotifications.onUnlocked();
+    showTab('write');loadEditor();updateCount(); QuietSpaces.unlocked(); QuietProgress.unlocked(); QuietNotifications.onUnlocked();
     await refreshSnapshots();
     scheduleFolderBackup();
     showToast('Backup restored successfully.');
@@ -676,7 +681,10 @@ async function init() {
   document.querySelectorAll('.tab').forEach(btn=>btn.addEventListener('click',()=>showTab(btn.dataset.tab)));
   document.querySelectorAll('.spaces-category').forEach(btn=>btn.addEventListener('click',()=>{
     const area = btn.dataset.category;
-    showTab(area === 'journal' ? lastJournalTab : area === 'skincare' ? 'selfcare' : 'exercise');
+    showTab(area === 'journal' ? lastJournalTab :
+      area === 'skincare' ? 'selfcare' :
+      area === 'meditation' ? 'meditation' :
+      area === 'progress' ? 'progress' : 'exercise');
   }));
   $('settings-btn').addEventListener('click',()=>{
     showTab(currentTab === 'backup' || currentTab === 'routines-settings' ? lastContentTab : lastSettingsTab);
@@ -687,6 +695,8 @@ async function init() {
     onRoutinesChanged:() => QuietNotifications.refreshSoon()});
   QuietNotifications.bind({getState:() => vault?.routines,
     save:() => queueSave(),toast:showToast});
+  QuietProgress.bind({getVault:() => unlocked ? vault : null,
+    save:() => queueSave(),toast:showToast,goTab:showTab});
   $('lock-btn').addEventListener('click',lockJournal);
   $('delete-entry').addEventListener('click',async () => {
     if (!confirm('Delete this entry? You can recover a previous restore point if one exists.')) return;

@@ -5,7 +5,7 @@
 const SHELL_CACHE = 'quietpages-shell-auto-v3';
 const STAGING_CACHE = 'quietpages-shell-staging-v3';
 const SHELL_FILES = [
-  './index.html', './styles.css', './spaces.css', './db.js', './app-version.js', './ota.js', './notifications.js', './exercise-guide.js', './spaces.js', './app.js', './manifest.webmanifest',
+  './index.html', './styles.css', './spaces.css', './db.js', './app-version.js', './ota.js', './notifications.js', './exercise-guide.js', './spaces.js', './progress.js', './app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'
 ];
 const ROOT_URL = new URL('./', self.registration.scope).href;
