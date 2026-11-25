@@ -1,4 +1,4 @@
 {
   "version": "0.2.1",
-  "notes": "First over-the-air update test: new About & updates confirmation, no APK rebuild."
+  "notes": "First OTA test release v0.2.1: check archive delivery and in-app version confirmation."
 }
