@@ -16,6 +16,7 @@ const assets = [
   'db.js',
   'app-version.js',
   'ota.js',
+  'notifications.js',
   'exercise-guide.js',
   'spaces.js',
   'app.js',
