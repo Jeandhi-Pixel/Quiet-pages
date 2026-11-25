@@ -30,7 +30,7 @@ const QuietSpaces = (() => {
       product('actiiv-shampoo','Actiiv shampoo','hair',['pm'],'interval'),
       product('actiiv-conditioner','Actiiv conditioner','hair',['pm'],'interval')
     ],
-    log:{},settings:{am:'08:00',pm:'21:30',workoutTime:'18:00',discreet:true,notificationsEnabled:false},
+    log:{},meditations:{},settings:{am:'08:00',pm:'21:30',workoutTime:'18:00',discreet:true,notificationsEnabled:false},
     plan:{strengthA:1,strengthB:4,yoga:[2,6]}
   });
   const safeText = (v,n=180) => typeof v==='string' ? v.slice(0,n) : '';
@@ -64,10 +64,17 @@ const QuietSpaces = (() => {
           ['done','skipped'].includes(value)) log[key]=value;
       }
     }
+    const meditations=Object.create(null);
+    if(raw.meditations && typeof raw.meditations==='object' && !Array.isArray(raw.meditations)){
+      for(const [date,minutes] of Object.entries(raw.meditations).slice(-12000)){
+        if(validDay(date) && Number.isInteger(minutes) && minutes>=1 && minutes<=600)
+          meditations[date]=minutes;
+      }
+    }
     const s=raw.settings&&typeof raw.settings==='object'?raw.settings:{};
     const p=raw.plan&&typeof raw.plan==='object'?raw.plan:{};
     const day=n=>Number.isInteger(n)&&n>=0&&n<=6;
-    return {version:1,products,log,
+    return {version:1,products,log,meditations,
       settings:{am:validTime(s.am)?s.am:'08:00',pm:validTime(s.pm)?s.pm:'21:30',
         workoutTime:validTime(s.workoutTime)?s.workoutTime:'18:00',
         discreet:s.discreet!==false,notificationsEnabled:s.notificationsEnabled===true},
