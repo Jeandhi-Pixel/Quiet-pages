@@ -19,6 +19,7 @@ const assets = [
   'notifications.js',
   'exercise-guide.js',
   'spaces.js',
+  'progress.js',
   'app.js',
   'manifest.webmanifest'
 ];
