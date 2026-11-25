@@ -1,0 +1,19 @@
+{
+  "appId": "io.github.jeandhipixel.quietspaces",
+  "appName": "Quiet Spaces",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "LIGHT",
+      "hidden": false
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": "off",
+      "statsUrl": "",
+      "appReadyTimeout": 30000,
+      "autoDeletePrevious": false
+    }
+  }
+}

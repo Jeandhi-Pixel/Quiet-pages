@@ -332,12 +332,13 @@ function renderHistory() {
 async function lockJournal() {
   try {await flushEditor();
     clearTimeout(backupFolderTimer);
-    if (backupDirectory) await attemptAutomaticFolderBackup();} catch (_) {showToast('Could not save. Your journal remains open.');return;}
+    if (backupDirectory) await attemptAutomaticFolderBackup();} catch (_) {showToast('Could not save. Your journal remains open.');return false;}
   unlocked = false;
   masterKey = null; saltBytes = null; vault = null;
   $('entry-body').value=''; $('entry-title').value='';
   $('history-list').replaceChildren(); $('search-input').value='';
   renderGate();
+  return true;
 }
 function downloadBackup() {
   flushEditor().then(() => {
@@ -616,6 +617,10 @@ async function installAppUpdate() {
   }
 }
 function setupAppUpdates() {
+  // Capacitor bundles a native release; never register the PWA's cache-first
+  // service worker inside Android WebView (it can interfere with plugin loading).
+  // Native updates must be delivered through a new signed APK.
+  if (globalThis.QuietSpacesNative === true || globalThis.Capacitor?.isNativePlatform?.()) return;
   $('update-now').addEventListener('click',installAppUpdate);
   $('update-later').addEventListener('click',()=>setUpdateBanner(false));
   if (!('serviceWorker' in navigator)) return;
@@ -705,5 +710,10 @@ async function init() {
   const online=()=>{$('network-state').textContent=navigator.onLine?'Offline-ready journal':'Working offline';};
   window.addEventListener('online',online);window.addEventListener('offline',online);online();
   setupAppUpdates();
+  QuietOTA.setBeforeApply(async () => {
+    if (!unlocked) return true;
+    return (await lockJournal()) === true;
+  });
+  QuietOTA.init().catch(err => console.warn('Quiet OTA unavailable:',err));
 }
 document.addEventListener('DOMContentLoaded',init);
