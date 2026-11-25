@@ -137,7 +137,12 @@ const QuietOTA = (() => {
       }
     } catch (err) {
       latest=null;
-      if (manual) status('Could not check: ' + String(err?.message || 'connection error').slice(0,130));
+      if (manual) {
+        const message=String(err?.message || 'connection error');
+        status(message.includes('404')
+          ? 'The OTA release channel is not published yet. No updates are available.'
+          : 'Could not check: ' + message.slice(0,130));
+      }
     } finally {busy=false;syncButton();}
   }
   async function install() {
