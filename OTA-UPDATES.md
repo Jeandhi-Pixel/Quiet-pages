@@ -16,10 +16,10 @@ This implementation uses **manual approval**: the app checks for updates on star
 
 ## Update hosting — no separate Capgo account
 
-Public HTTPS files under the existing GitHub Pages site:
+Public HTTPS files served directly from the GitHub repository (not the normal GitHub Pages website):
 
-- `https://jeandhi-pixel.github.io/Quiet-pages/ota/latest.json` — public release manifest.
-- `https://jeandhi-pixel.github.io/Quiet-pages/ota/releases/quiet-spaces-vX.Y.Z.zip` — zipped **web code only**.
+- `https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/latest.json` — public release manifest.
+- `https://raw.githubusercontent.com/Jeandhi-Pixel/Quiet-pages/main/ota/releases/quiet-spaces-vX.Y.Z.zip` — zipped **web code only**.
 
 The APK reads that fixed HTTPS manifest with Capacitor's native HTTP client to avoid WebView CORS restrictions. It checks strict same-origin bundle URLs, semantic version ordering, native revision and a SHA-256 ZIP checksum. No journal entries, passwords, product history or profile identifiers are uploaded or transmitted by the update checker.
 
@@ -47,10 +47,10 @@ npm.cmd run android:open
 1. Test and merge the HTML/CSS/JS changes to `main` (no native/plugin changes). Do not include private journal data.
 2. Open GitHub → **Actions → Publish Quiet Spaces OTA web update → Run workflow** on the `main` branch.
 3. Enter a new version such as `0.2.1` (greater than the previous published release and native baseline), and short notes.
-4. The workflow packages `www/` with the official Capgo CLI, computes SHA-256, commits the ZIP and `ota/latest.json` to main, then GitHub Pages publishes them.
+4. The workflow packages `www/` with the official Capgo CLI, computes SHA-256, commits the ZIP and `ota/latest.json` to main, then GitHub's raw-file endpoint serves them.
 5. On your phone, open Quiet Spaces while online. It will offer the new version. Tap **Update now**; it saves and locks the journal before applying the bundle.
 
-Manual publishing requires a GitHub Actions workflow with **Contents: write** permission. If your repository limits workflow writes, grant the workflow permission in repository settings. If your GitHub Pages configuration is not publishing the repository `main` branch's root files, update the release hosting URL/workflow accordingly before enabling OTA.
+Manual publishing requires a GitHub Actions workflow with **Contents: write** permission. If your repository limits workflow writes, grant the workflow permission in repository settings. Raw GitHub files can be cached by GitHub's CDN briefly. The update checker adds a cache-busting query to the manifest check.
 
 ## Rollback and data safety
 
