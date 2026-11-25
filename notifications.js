@@ -129,7 +129,8 @@ const QuietNotifications = (() => {
     test.disabled=busy || !supported() || !state();
     if(!supported())status('Local reminders are available in the Android app only.');
     else if(!state())status('Unlock Quiet Spaces to manage reminders.');
-    else if(!enabled)status('Reminders are off. Enable them to schedule notifications.');
+    else if(!enabled && !$('spaces-notifications-status')?.textContent?.trim())
+      status('Reminders are off. Enable them to schedule notifications.');
   }
   function managedPending(list) {
     return (Array.isArray(list)?list:[]).filter(x=>managed(x.id)).map(x=>({id:x.id}));
