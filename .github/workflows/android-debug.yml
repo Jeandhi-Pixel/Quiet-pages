@@ -8,6 +8,9 @@ on:
       - 'scripts/**'
       - 'index.html'
       - 'app.js'
+      - 'app-version.js'
+      - 'ota.js'
+      - 'ota/**'
       - 'spaces.js'
       - 'exercise-guide.js'
       - 'db.js'
@@ -34,8 +37,21 @@ jobs:
           java-version: '21'
       - name: Install web and Capacitor dependencies
         run: npm install --no-audit --no-fund
+      - name: Validate JavaScript sources
+        run: |
+          node --check app.js
+          node --check app-version.js
+          node --check ota.js
+          node --check scripts/build-android-web.mjs
+          node --check scripts/release-ota.mjs
       - name: Generate Android project and stage app
         run: npm run android:init
+      - name: Verify staged OTA assets
+        run: |
+          test -s www/ota.js
+          test -s www/app-version.js
+          grep -q 'native-env.js' www/index.html
+          grep -q 'CapacitorUpdater' capacitor.config.json
       - name: Check Maven dependency access
         run: |
           curl --fail --location --silent --show-error --retry 2 --retry-delay 2 --output /dev/null https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.0/kotlin-stdlib-2.2.0.pom
