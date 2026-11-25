@@ -46,3 +46,6 @@ html.quiet-native body {
 .spaces-ota-banner>span{font-size:12px;color:#647468}
 .spaces-ota-actions{display:flex;gap:10px;flex-wrap:wrap}
 .spaces-ota-actions .btn{flex:1}
+
+/* Visible only after the first successful native OTA bundle runs. */
+.spaces-ota-test-result{font-size:13px;color:#40694e;font-weight:700;padding:8px 10px;border-radius:9px;background:#ebf2e9}
