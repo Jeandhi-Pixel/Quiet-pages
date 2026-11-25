@@ -14,6 +14,7 @@ on:
       - 'tests/**'
       - 'ota/**'
       - 'spaces.js'
+      - 'progress.js'
       - 'exercise-guide.js'
       - 'db.js'
       - '*.css'
@@ -45,16 +46,20 @@ jobs:
           node --check app-version.js
           node --check ota.js
           node --check notifications.js
+          node --check progress.js
           node --check scripts/build-android-web.mjs
           node --check scripts/release-ota.mjs
       - name: Run local reminder scheduler unit tests
         run: npm run test:notifications
+      - name: Run progress and meditation regression tests
+        run: npm run test:progress
       - name: Generate Android project and stage app
         run: npm run android:init
       - name: Verify staged OTA assets
         run: |
           test -s www/ota.js
           test -s www/notifications.js
+          test -s www/progress.js
           test -s www/app-version.js
           grep -q 'native-env.js' www/index.html
           grep -q 'CapacitorUpdater' capacitor.config.json
@@ -69,11 +74,11 @@ jobs:
       - name: Smoke-test self-hosted OTA ZIP packaging
         run: |
           npm run build:android-web
-          node scripts/release-ota.mjs prepare 0.2.2
-          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle 0.2.2 --name quiet-spaces-v0.2.2.zip --json
-          test -s quiet-spaces-v0.2.2.zip
-          node scripts/release-ota.mjs finalize 0.2.2 quiet-spaces-v0.2.2.zip
-          node -e "const m=require('./ota/latest.json');if(m.version!=='0.2.2'||!m.checksum||m.checksum.length!==64)process.exit(1)"
+          node scripts/release-ota.mjs prepare 0.2.3
+          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle 0.2.3 --name quiet-spaces-v0.2.3.zip --json
+          test -s quiet-spaces-v0.2.3.zip
+          node scripts/release-ota.mjs finalize 0.2.3 quiet-spaces-v0.2.3.zip
+          node -e "const m=require('./ota/latest.json');if(m.version!=='0.2.3'||!m.checksum||m.checksum.length!==64)process.exit(1)"
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
