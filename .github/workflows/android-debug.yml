@@ -69,10 +69,11 @@ jobs:
       - name: Smoke-test self-hosted OTA ZIP packaging
         run: |
           npm run build:android-web
-          node scripts/release-ota.mjs prepare 0.2.1
-          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle 0.2.1 --name quiet-spaces-v0.2.1 --json
-          find . -type f -name '*.zip' -not -path './node_modules/*' -print
-          node -e "const fs=require('fs');const v=fs.readFileSync('www/app-version.js','utf8');if(!v.includes(\"'0.2.1'\"))process.exit(1)"
+          node scripts/release-ota.mjs prepare 0.2.2
+          npx --yes @capgo/cli@latest bundle zip io.github.jeandhipixel.quietspaces --path ./www --bundle 0.2.2 --name quiet-spaces-v0.2.2.zip --json
+          test -s quiet-spaces-v0.2.2.zip
+          node scripts/release-ota.mjs finalize 0.2.2 quiet-spaces-v0.2.2.zip
+          node -e "const m=require('./ota/latest.json');if(m.version!=='0.2.2'||!m.checksum||m.checksum.length!==64)process.exit(1)"
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
