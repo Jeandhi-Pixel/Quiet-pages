@@ -10,6 +10,8 @@ on:
       - 'app.js'
       - 'app-version.js'
       - 'ota.js'
+      - 'notifications.js'
+      - 'tests/**'
       - 'ota/**'
       - 'spaces.js'
       - 'exercise-guide.js'
@@ -42,13 +44,17 @@ jobs:
           node --check app.js
           node --check app-version.js
           node --check ota.js
+          node --check notifications.js
           node --check scripts/build-android-web.mjs
           node --check scripts/release-ota.mjs
+      - name: Run local reminder scheduler unit tests
+        run: npm run test:notifications
       - name: Generate Android project and stage app
         run: npm run android:init
       - name: Verify staged OTA assets
         run: |
           test -s www/ota.js
+          test -s www/notifications.js
           test -s www/app-version.js
           grep -q 'native-env.js' www/index.html
           grep -q 'CapacitorUpdater' capacitor.config.json
