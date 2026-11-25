@@ -158,7 +158,7 @@ async function gateSubmit(event) {
     selectedDate = localDateKey(new Date());
     $('gate-password').value = ''; $('gate-confirm').value = '';
     $('gate').hidden = true; $('app').hidden = false;
-    showTab('write'); loadEditor(); updateCount(); updateTodayLabel(); QuietSpaces.unlocked();
+    showTab('write'); loadEditor(); updateCount(); updateTodayLabel(); QuietSpaces.unlocked(); QuietNotifications.onUnlocked();
     requestPersistentStorage();
     await initializeBackupUI();
     if (migratedFromLegacy) {
@@ -382,7 +382,7 @@ async function restoreBackup() {
     masterKey=key;saltBytes=unb64(pendingBackup.salt);vault=restored;
     selectedDate=localDateKey(new Date());
     pendingBackup=null;$('import-panel').hidden=true;
-    showTab('write');loadEditor();updateCount(); QuietSpaces.unlocked();
+    showTab('write');loadEditor();updateCount(); QuietSpaces.unlocked(); QuietNotifications.onUnlocked();
     await refreshSnapshots();
     scheduleFolderBackup();
     showToast('Backup restored successfully.');
@@ -683,6 +683,9 @@ async function init() {
   });
   $('search-input').addEventListener('input',renderHistory);
   QuietSpaces.bind({getState:() => vault?.routines,
+    save:() => queueSave(),toast:showToast,
+    onRoutinesChanged:() => QuietNotifications.refreshSoon()});
+  QuietNotifications.bind({getState:() => vault?.routines,
     save:() => queueSave(),toast:showToast});
   $('lock-btn').addEventListener('click',lockJournal);
   $('delete-entry').addEventListener('click',async () => {

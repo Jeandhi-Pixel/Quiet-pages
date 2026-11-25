@@ -85,3 +85,11 @@
 @keyframes spaces-guide-enter{from{opacity:.65;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:620px){.spaces-exercise-guide{padding:14px 13px}.spaces-motion{padding:9px 5px 7px}.spaces-guide-summary{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.spaces-exercise-guide{animation:none}}
+
+/* Android local reminders — opt-in controls, visually aligned with Settings. */
+.spaces-native-notification-settings{margin-top:19px;padding-top:16px;border-top:1px solid var(--line)}
+.spaces-native-notification-settings .spaces-muted{margin-bottom:12px}
+.spaces-reminder-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+.spaces-reminder-actions .btn{flex:1 1 165px;white-space:normal}
+#spaces-notifications-status{font-size:12px;line-height:1.6;margin:10px 0 0}
+#spaces-workout-time{max-width:210px}
