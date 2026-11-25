@@ -29,7 +29,6 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
     steps:
       - uses: actions/checkout@v4
         with:
