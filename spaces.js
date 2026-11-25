@@ -30,7 +30,7 @@ const QuietSpaces = (() => {
       product('actiiv-shampoo','Actiiv shampoo','hair',['pm'],'interval'),
       product('actiiv-conditioner','Actiiv conditioner','hair',['pm'],'interval')
     ],
-    log:{},settings:{am:'08:00',pm:'21:30',discreet:true},
+    log:{},settings:{am:'08:00',pm:'21:30',workoutTime:'18:00',discreet:true,notificationsEnabled:false},
     plan:{strengthA:1,strengthB:4,yoga:[2,6]}
   });
   const safeText = (v,n=180) => typeof v==='string' ? v.slice(0,n) : '';
@@ -68,7 +68,9 @@ const QuietSpaces = (() => {
     const p=raw.plan&&typeof raw.plan==='object'?raw.plan:{};
     const day=n=>Number.isInteger(n)&&n>=0&&n<=6;
     return {version:1,products,log,
-      settings:{am:validTime(s.am)?s.am:'08:00',pm:validTime(s.pm)?s.pm:'21:30',discreet:s.discreet!==false},
+      settings:{am:validTime(s.am)?s.am:'08:00',pm:validTime(s.pm)?s.pm:'21:30',
+        workoutTime:validTime(s.workoutTime)?s.workoutTime:'18:00',
+        discreet:s.discreet!==false,notificationsEnabled:s.notificationsEnabled===true},
       plan:{strengthA:day(p.strengthA)?p.strengthA:1,strengthB:day(p.strengthB)?p.strengthB:4,
         yoga:Array.isArray(p.yoga)?[...new Set(p.yoga.filter(day))]:[2,6] }
     };
@@ -210,7 +212,7 @@ const QuietSpaces = (() => {
     else if(tab==='selfcare')renderSelfCare();
   }
   function renderAll(){renderExercise();renderSelfCare();}
-  function saveAndRefresh(){save();renderAll();}
+  function saveAndRefresh(){save();renderAll();ctx?.onRoutinesChanged?.();}
   function showEditor(p){
     editing=p?.id||null;
     $('spaces-product-editor').hidden=false;
@@ -261,6 +263,7 @@ const QuietSpaces = (() => {
   function renderPreferences(){
     const s=state().settings,p=state().plan;
     $('spaces-am-time').value=s.am;$('spaces-pm-time').value=s.pm;
+    $('spaces-workout-time').value=s.workoutTime;
     $('spaces-discreet').checked=s.discreet;
     $('spaces-strength-a').value=p.strengthA;
     $('spaces-strength-b').value=p.strengthB;
@@ -280,7 +283,9 @@ const QuietSpaces = (() => {
       if(a===b){ctx.toast('Choose different days for Strength A and B.');return;}
       state().settings={
         am:$('spaces-am-time').value||'08:00',pm:$('spaces-pm-time').value||'21:30',
-        discreet:$('spaces-discreet').checked
+        workoutTime:$('spaces-workout-time').value||'18:00',
+        discreet:$('spaces-discreet').checked,
+        notificationsEnabled:state().settings.notificationsEnabled===true
       };
       state().plan={strengthA:a,strengthB:b,
         yoga:[...document.querySelectorAll('[data-space-yoga]:checked')].map(x=>Number(x.dataset.spaceYoga))};
